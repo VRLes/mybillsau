@@ -10,6 +10,8 @@ import { AddBillForm } from "@/components/AddBillForm";
 import { ReminderBanner } from "@/components/ReminderBanner";
 import { CalendarView } from "@/components/CalendarView";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ColorThemeToggle } from "@/components/ColorThemeToggle";
+import { HomeScreenPill } from "@/components/HomeScreenPill";
 import Link from "next/link";
 export default function Home() {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -91,7 +93,12 @@ export default function Home() {
         My Bills
       </h1>
 
-      <ThemeToggle />
+      <HomeScreenPill />
+
+      <div className="flex flex-wrap gap-3 mb-6">
+        <ThemeToggle />
+        <ColorThemeToggle />
+      </div>
 
       <Link
         href="/history"

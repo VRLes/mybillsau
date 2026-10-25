@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getSavedColorTheme, getSavedDarkMode, applyTheme } from "@/lib/theme";
 
 export function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
@@ -8,24 +9,17 @@ export function ThemeToggle() {
   const [hasToggled, setHasToggled] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    if (saved === "dark") {
-      setIsDark(true);
-      document.documentElement.classList.add("dark");
-    }
+    const theme = getSavedColorTheme();
+    const dark = getSavedDarkMode();
+    setIsDark(dark);
+    applyTheme(theme, dark);
   }, []);
 
   function toggleTheme() {
+    const theme = getSavedColorTheme();
     const next = !isDark;
     setIsDark(next);
-
-    if (next) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
+    applyTheme(theme, next);
 
     if (!hasToggled) {
       setShowMessage(true);

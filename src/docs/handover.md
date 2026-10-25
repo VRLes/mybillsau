@@ -1,3 +1,52 @@
+## Session: 14 October 2026 (afternoon)
+
+### What's finished
+
+- **Calculator % button** (`/calculator`): phone style. `200 + 10 %` gives 220, `200 × 10 %` gives 20. With + and −, % takes the percent of the first number. With × and ÷, it uses the plain percent (10 becomes 0.1). With no sum waiting, it divides the screen number by 100. Top row is now wide Clear, Back, %. New function `pressPercent` sits above `pressBack`. Confirmed working by Les
+- **Converter, new Fuel topic**: Litres to Gallons, and Litres per 100 km to Miles per gallon. Hint text: "Litres, gallons, litres per 100 km, miles per gallon"
+- **Converter, Cooking**: new "Litres to Gallons" for water and other liquids
+- **Gallon size follows the Australia / UK / US picker**: Australia and UK use the Imperial gallon (4.546 litres), US uses the US gallon (3.785 litres). Same picker and same saved `measureRegion` as Cooking
+- **Picker now shows on Cooking and Fuel**. Heading is "Whose gallons?" on Fuel and "Whose spoons and cups?" on Cooking
+- **Note line under the answer** on all three gallon/fuel conversions, e.g. "In Australia, 1 gallon is the Imperial gallon (4.546 litres)." Added because Les spotted that Australia uses Imperial gallons and users might compare with US figures and think it's wrong
+- **Removed the "Put this on my home screen" pill** from the bottom of the main page (a tester found it confusing). The home screen topic is now only reachable through the Help page. Les chose option A (no replacement link)
+- Two commits pushed to Vercel (% button; Fuel plus pill removal)
+
+### Key decisions & reasoning
+
+- % is phone style because it suits discounts and GST
+- Fuel economy is written out in full, not a simple multiply: a lower L/100km is better, a higher MPG is better. The same formula works in both directions
+- Kept the country picker instead of renaming it to "Imperial / US gallon", because renaming would also change how Cooking spoons and cups are picked
+- Les's tester feedback decided the pill removal. Option B (small plain link at the bottom of the main page: "Want this on your phone's home screen? See how") is the fallback if people can't find it
+
+### What didn't work / had to be fixed
+
+- First draft of the MPG formula (Step 3) was a mess and was replaced by a clean version before use. Worth a quick look at the `l100-mpg` block in `converter/page.tsx` to confirm it's the short one (one line each for forward and backward)
+- Australia showing Imperial gallons looked like a bug to Les. It is correct, just unexplained, hence the note line
+- The "Put this on my home screen" pill confused a tester
+
+### Not yet confirmed
+
+- Real-phone check of the live site after deploy: no % bug, Fuel topic with picker, home screen pill gone
+- Help page may still describe the home screen button as being at the bottom of the main page. Check the wording and fix it. Also check whether the Converter and Calculator topics should mention Fuel, gallons and %
+- Cooking hint on the topic list still says "Spoons, cups, millilitres" and doesn't mention gallons (minor)
+- Carried over: iPhone home screen storage wording in Help; phone / tablet print and save as PDF wording; ReminderBanner dates (`src/components/ReminderBanner.tsx`); full mobile-friendliness check
+
+### Next steps (in priority order)
+
+1. Test on a real iPhone and tablet, then tidy the Help wording (including the home screen topic)
+2. Ask the tester if they can find the home screen help now. If not, add the plain link (option B)
+3. Carer / family sharing: read-only view or overdue notifications (planned paid-tier feature)
+4. Freemium paywall / tier logic when ready to monetise
+
+### Useful reference
+
+- Local dev: `cd ~/projects/seniors-bill-tracker && npm run dev`
+- Save and deploy (second terminal): `git add . && git commit -m "..." && git log --oneline -2 && git push`
+- Files touched this session: `src/app/calculator/page.tsx`, `src/app/converter/page.tsx`, `src/app/page.tsx`
+
+
+
+
 ## Session: 14 October 2026
 
 ### What's finished
