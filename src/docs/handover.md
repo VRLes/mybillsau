@@ -1,5 +1,52 @@
-## Session: 14 October 2026 (afternoon)
+## Session: 25 October 2026
 
+### What's finished
+
+- **Three color themes added**: Warm Cream (was Sage & Cream — reworked to warm tan/terracotta tones so it's visually distinct from Green), Green, and Blue. Each has a full light + dark palette defined in `globals.css` as `.theme-green`, `.theme-blue` (default `:root`/`.dark` is Warm Cream)
+- **Color theme button** (`ColorThemeToggle.tsx`) cycles through all three in order, labelled "Switch to [next theme] theme"
+- **Dark/light mode simplified to ONE shared setting** across all themes (was per-theme at first, which looked like a bug — switching themes silently flipped dark/light back and forth). Now one button, one setting, applies everywhere. Logic lives in `lib/theme.ts`
+- **"Tap or Click Here to Save This App" pill** added directly under the "My Bills" heading — bold amber box with a `›` arrow cue, links to the existing Help page's "Put this on my home screen" section (`/help#home-screen`)
+  - Auto-hides permanently once the app is opened from the home screen icon the user saved (checks `display-mode: standalone` / `navigator.standalone`), stored in localStorage as `homeScreenSaved`
+  - Wording iterated a few times: final version says it works on "phone, iPad, tablet or computer" and uses plain instruction wording rather than a passive description, so seniors recognise it's tappable
+- Confirmed via local browser testing: all 3 themes × light/dark (6 combinations), pill behaviour, navigation between pages (History, Help) all keep the chosen theme/mode correctly
+- Two commits pushed to Vercel this session
+
+### Key decisions & reasoning
+
+- Dropped per-theme dark/light memory in favour of one global setting — Les flagged it looked confusing/buggy for seniors, correctly identified as a real UX problem, not just a preference
+- Reworked "Sage & Cream" → "Warm Cream" because it was too close to Green (both green-dominant) — now the three themes are genuinely visually distinct: warm neutral, cool green, cool blue
+- Decided against adding a 4th theme — three is already a reasonable ceiling for the target audience (decision fatigue risk for users with memory loss)
+- Home screen pill instruction wording changed from a statement ("Save this app to your phone") to a direct instruction ("Tap or Click Here...") plus an arrow, because the original didn't read as interactive
+
+### What didn't work / had to be fixed
+
+- First `ColorThemeToggle.tsx` file was saved with a typo as `ColorThemeToggle,tsx` (comma instead of period) — caused a module-not-found build error, fixed by renaming the file
+- A Ctrl+H find/replace in `page.tsx` failed because the actual import line had an unexpected `.tsx` extension already in it (`from "@/components/ColorThemeToggle.tsx"`) — had to ask for the file contents to spot it
+- Per-theme dark/light memory (original Blue theme build) looked like a bug when switching themes — reworked as above
+
+### Not yet confirmed
+
+- Real-phone/tablet check of the live site after deploy: theme switching, dark mode staying put, and — most importantly — the home screen pill actually disappearing after a real "Add to Home Screen" on iPhone/iPad
+- Whether "device" wording in the pill subtext lands fine for seniors — Les reviewed and was happy, but worth watching for tester feedback
+- Carried over from last session: Help page wording check, carer/family sharing feature, freemium paywall
+
+### Next steps (in priority order)
+
+1. Real-phone/tablet test: confirm themes, dark mode, and the home screen pill's auto-hide behaviour
+2. Get tester feedback on whether the new pill is obviously tappable now
+3. Carer / family sharing (planned paid-tier feature)
+4. Freemium paywall / tier logic when ready to monetise
+
+### Useful reference
+
+- Local dev: `cd ~/projects/seniors-bill-tracker && npm run dev`
+- Save and deploy (second terminal): `git add . && git commit -m "..." && git push`
+- Files touched this session: `src/app/globals.css`, `src/lib/theme.ts`, `src/components/ThemeToggle.tsx`, `src/components/ColorThemeToggle.tsx`, `src/components/HomeScreenPill.tsx`, `src/app/page.tsx`
+
+
+
+
+## Session: 14 October 2026 (afternoon)
 ### What's finished
 
 - **Calculator % button** (`/calculator`): phone style. `200 + 10 %` gives 220, `200 × 10 %` gives 20. With + and −, % takes the percent of the first number. With × and ÷, it uses the plain percent (10 becomes 0.1). With no sum waiting, it divides the screen number by 100. Top row is now wide Clear, Back, %. New function `pressPercent` sits above `pressBack`. Confirmed working by Les
