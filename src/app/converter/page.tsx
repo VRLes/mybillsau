@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 
 type Region = "Australia" | "UK" | "US";
 type Topic = "Length" | "Weight" | "Temperature" | "Cooking" | "Speed" | "Area" | "Fuel";
@@ -225,19 +224,10 @@ export default function ConverterPage() {
       : null;
 
     return (
-      <main className="min-h-screen bg-[var(--bg-page)] p-4 sm:p-8 max-w-md mx-auto">
+      <main className="min-h-screen bg-[var(--bg-page)] p-4 sm:p-8 max-w-md mx-auto w-full">
         <h1 className="text-4xl font-bold mb-6 text-[var(--text-primary)]">
           Converter
         </h1>
-
-      <div className="mb-4">
-        <Link
-          href="/help#converter"
-          className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-full px-5 py-2 shadow-md hover:shadow-lg transition-all"
-        >
-          How does this work?
-        </Link>
-      </div>
 
         <button onClick={() => setConversion(null)} className={backButton}>
           ← Back to {topic}
@@ -303,19 +293,10 @@ export default function ConverterPage() {
   // ---- Step 2: pick a conversion within the topic ----
   if (topic) {
     return (
-      <main className="min-h-screen bg-[var(--bg-page)] p-4 sm:p-8 max-w-md mx-auto">
+      <main className="min-h-screen bg-[var(--bg-page)] p-4 sm:p-8 max-w-md mx-auto w-full">
         <h1 className="text-4xl font-bold mb-6 text-[var(--text-primary)]">
           Converter
         </h1>
-
-      <div className="mb-4">
-        <Link
-          href="/help#converter"
-          className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-full px-5 py-2 shadow-md hover:shadow-lg transition-all"
-        >
-          How does this work?
-        </Link>
-      </div>
 
         <button onClick={() => setTopic(null)} className={backButton}>
           ← Back to all topics
@@ -346,23 +327,10 @@ export default function ConverterPage() {
 
   // ---- Step 1: pick a topic ----
   return (
-    <main className="min-h-screen bg-[var(--bg-page)] p-4 sm:p-8 max-w-md mx-auto">
+    <main className="min-h-screen bg-[var(--bg-page)] p-4 sm:p-8 max-w-md mx-auto w-full">
       <h1 className="text-4xl font-bold mb-6 text-[var(--text-primary)]">
         Converter
       </h1>
-
-      <div className="mb-4">
-        <Link
-          href="/help#converter"
-          className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-full px-5 py-2 shadow-md hover:shadow-lg transition-all"
-        >
-          How does this work?
-        </Link>
-      </div>
-
-      <Link href="/" className={backButton}>
-        Back to my bills
-      </Link>
 
       <h2 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">
         What do you want to convert?

@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 // This file tells Android phones the app's name, colours and icon
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Bill Toolkit: bills, calculator and converter",
-    short_name: "Bill Toolkit", // shown under the icon
+    name: "My Bills",
+    short_name: "My Bills", // shown under the icon
     description:
       "A simple bill tracker, calculator and unit converter, made easy to read and use.",
     start_url: "/",

@@ -121,7 +121,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--bg-page)] px-4 py-6 sm:p-8 max-w-2xl mx-auto">
+    <main className="min-h-screen bg-[var(--bg-page)] px-4 py-6 sm:p-8 max-w-2xl mx-auto w-full">
       <TodayAnswer summary={summary} today={today} />
 
       <h1 className="text-4xl font-bold mb-4 text-[var(--text-primary)]">
@@ -177,26 +177,6 @@ export default function Home() {
         <CalendarView bills={bills} onSelectDay={handleSelectDay} />
       )}
 
-      <div className="flex flex-wrap gap-3 mb-6">
-        <Link
-          href="/history"
-          className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-all"
-        >
-          Paid Bills
-        </Link>
-        <Link
-          href="/calculator"
-          className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-all"
-        >
-          Calculator
-        </Link>
-        <Link
-          href="/converter"
-          className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-all"
-        >
-          Converter
-        </Link>
-      </div>
 
       <HomeScreenPill />
 

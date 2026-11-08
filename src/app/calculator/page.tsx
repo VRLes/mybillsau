@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Bill } from "@/types/bill";
 import { loadBills, unpaidBills } from "@/lib/bills";
-import Link from "next/link";
 
 type Operator = "+" | "−" | "×" | "÷";
 
@@ -203,26 +202,10 @@ export default function CalculatorPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--bg-page)] p-4 sm:p-8 max-w-md mx-auto">
+    <main className="min-h-screen bg-[var(--bg-page)] p-4 sm:p-8 max-w-md mx-auto w-full">
       <h1 className="text-4xl font-bold mb-6 text-[var(--text-primary)]">
         Calculator
       </h1>
-
-      <Link
-        href="/"
-        className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-all mb-6"
-      >
-        Back to my bills
-      </Link>
-
-      <div className="mb-4">
-        <Link
-          href="/help#calculator"
-          className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-full px-5 py-2 shadow-md hover:shadow-lg transition-all"
-        >
-          How does this work?
-        </Link>
-      </div>
 
       {/* The screen. The small line shows the sum in progress, so nothing has to be remembered */}
 

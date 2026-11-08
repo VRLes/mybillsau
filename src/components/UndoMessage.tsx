@@ -15,7 +15,7 @@ export function UndoMessage({
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-0 bottom-4 px-4 flex justify-center pointer-events-none"
+      className="fixed inset-x-0 bottom-[calc(6.5rem+env(safe-area-inset-bottom))] z-50 px-4 flex justify-center pointer-events-none"
     >
       {shown && (
         <div className="pointer-events-auto max-w-2xl w-full bg-[var(--banner-ok-bg)] border-2 border-[var(--banner-ok-border)] rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
