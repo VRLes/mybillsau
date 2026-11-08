@@ -8,10 +8,13 @@ import {
   financialYear,
   formatLocalDate,
   loadBills,
+  markPaid,
+  markUnpaid,
   paidBillsBetween,
   saveBills,
   summarise,
   todayLocal,
+  undoMarkPaid,
 } from "./bills";
 
 function bill(overrides: Partial<Bill> = {}): Bill {
@@ -81,6 +84,45 @@ describe("Paid", () => {
   it("a paid Bill is Paid whatever its due date", () => {
     expect(billStatus(bill({ paid: true, dueDate: "2026-01-01" }), "2026-11-08")).toBe("paid");
     expect(billStatus(bill({ paid: true, dueDate: "2026-11-10" }), "2026-11-08")).toBe("paid");
+  });
+});
+
+describe("Mark as Paid", () => {
+  it("marks the Bill paid and records today's local date as its paid date", () => {
+    // 8:30 am on 9 Nov in Sydney is still 8 Nov in UTC: the paid date must be the 9th
+    const today = todayLocal(new Date("2026-11-09T08:30:00+11:00"));
+    const { bills } = markPaid([bill({ id: "a" }), bill({ id: "b" })], "a", today);
+    expect(bills).toEqual([
+      bill({ id: "a", paid: true, paidDate: "2026-11-09" }),
+      bill({ id: "b" }),
+    ]);
+  });
+
+  it("Undo puts the Bill back exactly as it was: unpaid, with no paid date", () => {
+    const before = [
+      bill({ id: "a", name: "Rent", dueDate: "2026-11-01" }),
+      bill({ id: "b", name: "Water" }),
+    ];
+    const marked = markPaid(before, "a", "2026-11-08");
+    const undone = undoMarkPaid(marked.bills, marked.undo!);
+    expect(undone).toEqual(before);
+    expect(undone[0]).not.toHaveProperty("paidDate");
+  });
+
+  it("marking a paid Bill unpaid again clears its paid date", () => {
+    const paid = bill({ id: "a", paid: true, paidDate: "2026-11-01" });
+    const [unpaid] = markUnpaid([paid], "a");
+    expect(unpaid).toEqual(bill({ id: "a" }));
+    expect(unpaid).not.toHaveProperty("paidDate");
+  });
+
+  it("Undo leaves other changes made since alone", () => {
+    const marked = markPaid([bill({ id: "a" })], "a", "2026-11-08");
+    const added = [...marked.bills, bill({ id: "new", name: "Phone" })];
+    expect(undoMarkPaid(added, marked.undo!)).toEqual([
+      bill({ id: "a" }),
+      bill({ id: "new", name: "Phone" }),
+    ]);
   });
 });
 
@@ -271,6 +313,24 @@ describe("Loading and saving", () => {
         category: "internet",
       },
     ]);
+  });
+
+  it("a Bill paid before paid dates were recorded loads with no paid date, and saving keeps it that way", () => {
+    const storage = fakeStorage({
+      bills:
+        '[{"id":"1","name":"Internet","amount":79.99,"dueDate":"2026-10-10","paid":true,"category":"internet"}]',
+    });
+    const loaded = loadBills(storage);
+    expect(loaded[0].paid).toBe(true);
+    expect(loaded[0]).not.toHaveProperty("paidDate");
+    saveBills(storage, loaded);
+    expect(loadBills(storage)).toEqual(loaded);
+  });
+
+  it("a paid date survives saving and loading", () => {
+    const storage = fakeStorage();
+    saveBills(storage, markPaid([bill({ id: "a" })], "a", "2026-11-08").bills);
+    expect(loadBills(storage)[0].paidDate).toBe("2026-11-08");
   });
 
   it("saved Bills come back the same when loaded", () => {
