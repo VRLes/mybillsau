@@ -155,7 +155,7 @@
 ### What's finished
 
 - Next.js + TypeScript + Tailwind app scaffolded at `~/Projects/seniors-bill-tracker`
-- Live at: https://seniors-bill-tracker.vercel.app
+- Live at: https://mybillsau.vercel.app (Vercel project "my-bills"; the old https://seniors-bill-tracker.vercel.app still works, and bills saved there stay there, because browser storage is per address)
 - GitHub: https://github.com/VRLes/seniors-bill-tracker
 - Core bill tracking: add / mark paid / delete bills, saved in browser (localStorage)
 - Category icons (electricity, water, internet, phone, rent, insurance, subscription, other) via lucide-react — generic icons chosen over real company logos for simplicity
