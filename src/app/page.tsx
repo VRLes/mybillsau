@@ -89,7 +89,7 @@ export default function Home() {
   const today = todayLocal();
   const summary = summarise(bills, today);
   // The next Repeating bill that the last Mark as Paid brought in, if any
-  const nextDue = undo ? nextBillFrom(bills, undo) : undefined;
+  const nextBill = undo ? nextBillFrom(bills, undo) : undefined;
 
   function togglePaid(id: string) {
     const bill = bills.find((b) => b.id === id);
@@ -198,7 +198,7 @@ export default function Home() {
 
       <UndoMessage
         shown={undo !== null}
-        next={nextDue && formatLocalDate(nextDue.dueDate, DAY_DATE)}
+        nextDueText={nextBill && formatLocalDate(nextBill.dueDate, DAY_DATE)}
         onUndo={handleUndo}
       />
 

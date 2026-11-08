@@ -5,7 +5,9 @@ import {
   dueSoonUntil,
   formatLocalDate,
   type BillsSummary,
+  HOW_OFTEN_WORDS,
   howOften,
+  isEstimated,
   type LocalDate,
 } from "@/lib/bills";
 import { BillIcon } from "@/components/BillIcon";
@@ -16,12 +18,6 @@ interface BillActions {
   onDelete: (id: string) => void;
   onConfirmAmount: (id: string, amount: number) => void;
 }
-
-const HOW_OFTEN_WORDS = {
-  monthly: "Every month",
-  quarterly: "Every 3 months",
-  yearly: "Every year",
-} as const;
 
 /**
  * Bills grouped by how soon they need paying: Overdue, Due today,
@@ -98,6 +94,7 @@ function BillCard({
   onConfirmAmount,
 }: BillActions & { bill: Bill; overdue: boolean }) {
   const schedule = howOften(bill);
+  const estimated = isEstimated(bill);
   const look = overdue
     ? "bg-[var(--status-overdue-bg)] border-2 border-[var(--status-overdue-border)]"
     : "bg-[var(--bg-card)]";
@@ -119,13 +116,13 @@ function BillCard({
           Due {formatLocalDate(bill.dueDate, DAY_DATE)}
           {schedule !== "once" && ` · ${HOW_OFTEN_WORDS[schedule]}`}
         </p>
-        {bill.estimated && !bill.paid && (
+        {estimated && (
           <EstimatedAmount bill={bill} onConfirmAmount={onConfirmAmount} />
         )}
       </div>
       <div className="text-right">
         <p className="text-2xl font-bold text-[var(--text-primary)]">
-          {bill.estimated && !bill.paid && (
+          {estimated && (
             <span className="text-lg font-semibold">about </span>
           )}
           ${bill.amount.toFixed(2)}

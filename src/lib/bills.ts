@@ -161,6 +161,14 @@ export function howOften(bill: Bill): HowOften {
   return bill.howOften ?? "once";
 }
 
+/** How often, in the words the Person sees. */
+export const HOW_OFTEN_WORDS: Record<HowOften, string> = {
+  once: "Just once",
+  monthly: "Every month",
+  quarterly: "Every 3 months",
+  yearly: "Every year",
+};
+
 /** What the Person fills in on the Add a bill page. */
 export type NewBill = Pick<Bill, "name" | "amount" | "dueDate" | "category"> & {
   howOften?: HowOften;
@@ -172,16 +180,37 @@ export type NewBill = Pick<Bill, "name" | "amount" | "dueDate" | "category"> & {
  */
 export function addBill(bills: Bill[], details: NewBill, id: string): Bill[] {
   const { howOften = "once", ...rest } = details;
-  const bill: Bill = { id, ...rest, paid: false };
-  if (howOften !== "once") {
-    Object.assign(bill, { howOften, seriesId: id, dueDay: dateParts(rest.dueDate)[2] });
-  }
+  const bill: Bill =
+    howOften === "once"
+      ? { id, ...rest, paid: false }
+      : {
+          id,
+          ...rest,
+          paid: false,
+          howOften,
+          seriesId: id,
+          dueDay: dateParts(rest.dueDate)[2],
+        };
   return [...bills, bill];
 }
 
 /** Removes one Bill for good. Every other Bill stays as it was, in order. */
 export function deleteBill(bills: Bill[], id: string): Bill[] {
   return bills.filter((b) => b.id !== id);
+}
+
+/** A copy of the Bill without one of its optional fields. */
+function without(bill: Bill, field: "paidDate" | "estimated"): Bill {
+  const copy = { ...bill };
+  delete copy[field];
+  return copy;
+}
+
+/** Every Bill in the same repeating series as `bill` (none for Just once). */
+function seriesOf(bills: Bill[], bill: Bill): Bill[] {
+  return bill.seriesId === undefined
+    ? []
+    : bills.filter((b) => b.seriesId === bill.seriesId);
 }
 
 /**
@@ -193,34 +222,29 @@ export interface MarkPaidUndo {
   nextId?: string;
 }
 
-/** True when another Bill in the same repeating series is still open. */
-function seriesHasOtherOpenBill(bills: Bill[], bill: Bill): boolean {
-  return bills.some(
-    (b) => b.id !== bill.id && !b.paid && b.seriesId === bill.seriesId,
-  );
-}
-
 /**
- * The Bill that follows a Repeating bill: one period later, with the amount
+ * The Bill that follows a Repeating bill: one period after the latest Bill in
+ * its series (so no period is ever added twice), with the amount just paid
  * copied as an Estimated amount. Undefined for a Just once Bill.
  */
-function nextBillAfter(bill: Bill): Bill | undefined {
+function nextBillAfter(bills: Bill[], bill: Bill): Bill | undefined {
   const schedule = howOften(bill);
-  if (schedule === "once") return undefined;
-  const seriesId = bill.seriesId ?? bill.id;
-  const dueDay = bill.dueDay ?? dateParts(bill.dueDate)[2];
-  const dueDate = nextDueDate(bill.dueDate, schedule, dueDay);
+  if (schedule === "once" || bill.seriesId === undefined) return undefined;
+  const latest = seriesOf(bills, bill).reduce((a, b) =>
+    b.dueDate > a.dueDate ? b : a,
+  );
+  const dueDate = nextDueDate(latest.dueDate, schedule, bill.dueDay);
   return {
-    // Unique within the series, as each Bill in it is due on a later date
-    id: `${seriesId}-${dueDate}`,
+    // Unique: no other Bill in the series is due this late
+    id: `${bill.seriesId}-${dueDate}`,
     name: bill.name,
     amount: bill.amount,
     dueDate,
     paid: false,
     category: bill.category,
     howOften: schedule,
-    seriesId,
-    dueDay,
+    seriesId: bill.seriesId,
+    dueDay: bill.dueDay,
     estimated: true,
   };
 }
@@ -239,9 +263,10 @@ export function markPaid(
   const marked = bills.map((b) =>
     b.id === id ? { ...b, paid: true, paidDate: today } : b,
   );
-  const next = seriesHasOtherOpenBill(bills, before)
-    ? undefined
-    : nextBillAfter(before);
+  const seriesStillOpen = seriesOf(bills, before).some(
+    (b) => b.id !== id && !b.paid,
+  );
+  const next = seriesStillOpen ? undefined : nextBillAfter(bills, before);
   if (!next) return { bills: marked, undo: { before } };
   return { bills: [...marked, next], undo: { before, nextId: next.id } };
 }
@@ -269,24 +294,24 @@ export function undoMarkPaid(bills: Bill[], undo: MarkPaidUndo): Bill[] {
 
 /**
  * Marks a paid Bill unpaid again, forgetting its paid date. For a Repeating
- * bill, the later open Bill in its series goes, so only one is ever open.
+ * bill, any other open Bill in its series goes, so only one is ever open.
  */
 export function markUnpaid(bills: Bill[], id: string): Bill[] {
   const bill = bills.find((b) => b.id === id);
   if (!bill) return bills;
-  const isLaterOpenInSeries = (b: Bill) =>
-    bill.seriesId !== undefined &&
-    b.seriesId === bill.seriesId &&
-    !b.paid &&
-    b.dueDate > bill.dueDate;
+  const otherOpen = new Set(
+    seriesOf(bills, bill)
+      .filter((b) => b.id !== id && !b.paid)
+      .map((b) => b.id),
+  );
   return bills
-    .filter((b) => !isLaterOpenInSeries(b))
-    .map((b) => {
-      if (b.id !== id) return b;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { paidDate, ...rest } = b;
-      return { ...rest, paid: false };
-    });
+    .filter((b) => !otherOpen.has(b.id))
+    .map((b) => (b.id === id ? { ...without(b, "paidDate"), paid: false } : b));
+}
+
+/** True while an unpaid Bill's amount is an Estimated amount ("about $X"). */
+export function isEstimated(bill: Bill): boolean {
+  return bill.estimated === true && !bill.paid;
 }
 
 /**
@@ -294,12 +319,9 @@ export function markUnpaid(bills: Bill[], id: string): Bill[] {
  * it stops being "about $X".
  */
 export function confirmAmount(bills: Bill[], id: string, amount: number): Bill[] {
-  return bills.map((b) => {
-    if (b.id !== id) return b;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { estimated, ...rest } = b;
-    return { ...rest, amount };
-  });
+  return bills.map((b) =>
+    b.id === id ? { ...without(b, "estimated"), amount } : b,
+  );
 }
 
 /** The browser-storage key Bills have always been saved under. */

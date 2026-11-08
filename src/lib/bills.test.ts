@@ -639,6 +639,32 @@ describe("Repeating bills: the next Bill", () => {
     expect(bills.filter((b) => b.seriesId === "r1" && !b.paid)).toEqual([next]);
   });
 
+  /** Open Bills in the rent series, by due date. */
+  function openRent(bills: Bill[]) {
+    return bills.filter((b) => b.seriesId === "r1" && !b.paid).map((b) => b.dueDate);
+  }
+
+  it("never two open Bills in one series, however paid Bills are marked unpaid again", () => {
+    // Pay Nov and Dec, then mark both unpaid again, oldest first
+    const afterNov = markPaid([rent], "r1", "2026-11-14").bills;
+    const dec = afterNov[1];
+    const afterDec = markPaid(afterNov, dec.id, "2026-12-14").bills;
+    const novUnpaid = markUnpaid(afterDec, "r1");
+    expect(openRent(novUnpaid)).toEqual(["2026-11-15"]);
+    const decUnpaid = markUnpaid(novUnpaid, dec.id);
+    expect(openRent(decUnpaid)).toHaveLength(1);
+  });
+
+  it("paying again after a later Bill was already paid brings in the period after the latest, never a copy", () => {
+    // Nov and Dec paid, Jan open; Nov marked unpaid (Jan goes), then paid again
+    const afterNov = markPaid([rent], "r1", "2026-11-14").bills;
+    const afterDec = markPaid(afterNov, afterNov[1].id, "2026-12-14").bills;
+    const repaid = markPaid(markUnpaid(afterDec, "r1"), "r1", "2026-12-20").bills;
+    expect(openRent(repaid)).toEqual(["2027-01-15"]);
+    const ids = repaid.map((b) => b.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   it("marking a paid Repeating bill unpaid again takes back the next Bill it brought in", () => {
     const paid = markPaid([rent], "r1", "2026-11-14").bills;
     const unpaid = markUnpaid(paid, "r1");

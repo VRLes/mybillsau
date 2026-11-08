@@ -5,12 +5,12 @@
  */
 export function UndoMessage({
   shown,
-  next,
+  nextDueText,
   onUndo,
 }: {
   shown: boolean;
   /** For a Repeating bill: when the next one that just appeared is due. */
-  next?: string;
+  nextDueText?: string;
   onUndo: () => void;
 }) {
   return (
@@ -24,7 +24,7 @@ export function UndoMessage({
         <div className="pointer-events-auto max-w-2xl w-full bg-[var(--banner-ok-bg)] border-2 border-[var(--banner-ok-border)] rounded-2xl shadow-lg p-4 flex items-center justify-between gap-4">
           <div className="text-[var(--banner-ok-text)]">
             <p className="text-xl font-semibold">Marked as paid</p>
-            {next && <p className="text-lg">Next one due {next}</p>}
+            {nextDueText && <p className="text-lg">Next one due {nextDueText}</p>}
           </div>
           <button
             onClick={onUndo}

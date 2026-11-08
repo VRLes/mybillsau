@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { BillCategory, HowOften } from "@/types/bill";
-import type { NewBill } from "@/lib/bills";
+import { HOW_OFTEN_WORDS, type NewBill } from "@/lib/bills";
 
 const categories: { value: BillCategory; label: string }[] = [
   { value: "electricity", label: "Electricity" },
@@ -16,12 +16,7 @@ const categories: { value: BillCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-const schedules: { value: HowOften; label: string }[] = [
-  { value: "once", label: "Just once" },
-  { value: "monthly", label: "Every month" },
-  { value: "quarterly", label: "Every 3 months" },
-  { value: "yearly", label: "Every year" },
-];
+const schedules: HowOften[] = ["once", "monthly", "quarterly", "yearly"];
 
 /** The Add a bill fields. Saving is left to the page, through the bills module. */
 export function AddBillForm({ onSave }: { onSave: (details: NewBill) => void }) {
@@ -105,11 +100,11 @@ export function AddBillForm({ onSave }: { onSave: (details: NewBill) => void }) 
           How often
         </legend>
         <div className="grid grid-cols-2 gap-3">
-          {schedules.map((s) => (
+          {schedules.map((schedule) => (
             <label
-              key={s.value}
+              key={schedule}
               className={`flex items-center gap-3 border-2 rounded-xl p-4 text-lg cursor-pointer text-[var(--text-primary)] ${
-                howOften === s.value
+                howOften === schedule
                   ? "border-[var(--accent-button-bg)] font-semibold"
                   : "border-[var(--border-default)]"
               }`}
@@ -117,12 +112,12 @@ export function AddBillForm({ onSave }: { onSave: (details: NewBill) => void }) 
               <input
                 type="radio"
                 name="howOften"
-                value={s.value}
-                checked={howOften === s.value}
-                onChange={() => setHowOften(s.value)}
+                value={schedule}
+                checked={howOften === schedule}
+                onChange={() => setHowOften(schedule)}
                 className="w-6 h-6 accent-[var(--accent-button-bg)]"
               />
-              {s.label}
+              {HOW_OFTEN_WORDS[schedule]}
             </label>
           ))}
         </div>
