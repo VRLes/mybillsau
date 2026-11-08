@@ -11,6 +11,8 @@ import {
   markPaid,
   markUnpaid,
   paidBillsBetween,
+  paidWords,
+  recentlyPaid,
   saveBills,
   summarise,
   todayLocal,
@@ -381,6 +383,32 @@ describe("For tax time", () => {
     });
   });
 
+  it("matches on paid date when it is known, not due date", () => {
+    const bills = [
+      // Due in June, paid in July: belongs to the new financial year
+      bill({ id: "a", name: "Paid late", dueDate: "2026-06-28", paid: true, paidDate: "2026-07-02" }),
+      // Due in July, paid early in June: belongs to the old one
+      bill({ id: "b", name: "Paid early", dueDate: "2026-07-03", paid: true, paidDate: "2026-06-30" }),
+    ];
+    expect(paidBillsBetween(bills, "2026-07-01", "2027-06-30").map((b) => b.name)).toEqual([
+      "Paid late",
+    ]);
+    expect(paidBillsBetween(bills, "2025-07-01", "2026-06-30").map((b) => b.name)).toEqual([
+      "Paid early",
+    ]);
+  });
+
+  it("falls back to due date for older Bills with no paid date, and orders by the date used", () => {
+    const bills = [
+      bill({ id: "a", name: "Paid 10 Aug", dueDate: "2026-07-05", paid: true, paidDate: "2026-08-10" }),
+      bill({ id: "b", name: "Due 1 Aug, no paid date", dueDate: "2026-08-01", paid: true }),
+    ];
+    expect(paidBillsBetween(bills, "2026-07-01", "2027-06-30").map((b) => b.name)).toEqual([
+      "Due 1 Aug, no paid date",
+      "Paid 10 Aug",
+    ]);
+  });
+
   it("lists paid Bills due in the range, including both end days, earliest first", () => {
     const bills = [
       bill({ id: "a", name: "Late June", dueDate: "2026-06-30", paid: true }),
@@ -393,6 +421,40 @@ describe("For tax time", () => {
       (b) => b.name,
     );
     expect(names).toEqual(["First day", "Last day"]);
+  });
+});
+
+describe("Paid Bills: recent first", () => {
+  it("lists paid Bills most recent paid date first, with unknown paid dates last", () => {
+    const bills = [
+      bill({ id: "a", name: "No date, due Sept", dueDate: "2026-09-01", paid: true }),
+      bill({ id: "b", name: "Paid 1 Nov", paid: true, paidDate: "2026-11-01" }),
+      bill({ id: "c", name: "Unpaid", paid: false }),
+      bill({ id: "d", name: "Paid 7 Nov", paid: true, paidDate: "2026-11-07" }),
+      bill({ id: "e", name: "No date, due Oct", dueDate: "2026-10-01", paid: true }),
+    ];
+    expect(recentlyPaid(bills).map((b) => b.name)).toEqual([
+      "Paid 7 Nov",
+      "Paid 1 Nov",
+      "No date, due Oct",
+      "No date, due Sept",
+    ]);
+  });
+
+  it("shows only the most recent few", () => {
+    const bills = Array.from({ length: 15 }, (_, i) =>
+      bill({ id: String(i), paid: true, paidDate: `2026-10-${String(i + 1).padStart(2, "0")}` }),
+    );
+    const recent = recentlyPaid(bills, 10);
+    expect(recent).toHaveLength(10);
+    expect(recent[0].paidDate).toBe("2026-10-15");
+  });
+
+  it("says when each Bill was paid, or that the date was not recorded", () => {
+    expect(paidWords(bill({ paid: true, paidDate: "2026-11-08" }))).toBe(
+      "Paid on Sunday 8 November",
+    );
+    expect(paidWords(bill({ paid: true }))).toBe("Paid (date not recorded)");
   });
 });
 

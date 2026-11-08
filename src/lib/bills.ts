@@ -203,13 +203,52 @@ export function financialYear(
   return { start: `${startYear}-07-01`, end: `${startYear + 1}-06-30` };
 }
 
-/** Paid Bills due from `start` to `end` (both days included), earliest first. */
+/**
+ * The date a paid Bill counts under for tax time: its paid date, or its due
+ * date for older Bills paid before paid dates were recorded.
+ */
+function taxDate(bill: Bill): LocalDate {
+  return bill.paidDate ?? bill.dueDate;
+}
+
+/**
+ * Paid Bills from `start` to `end` (both days included), earliest first.
+ * Matches on paid date, falling back to due date when it was not recorded.
+ */
 export function paidBillsBetween(
   bills: Bill[],
   start: LocalDate,
   end: LocalDate,
 ): Bill[] {
   return bills
-    .filter((b) => b.paid && b.dueDate >= start && b.dueDate <= end)
-    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+    .filter((b) => b.paid && taxDate(b) >= start && taxDate(b) <= end)
+    .sort((a, b) => taxDate(a).localeCompare(taxDate(b)));
+}
+
+/** How many recently paid Bills Paid Bills opens with. */
+export const RECENTLY_PAID_COUNT = 10;
+
+/**
+ * The answer to "did I pay it?": paid Bills, most recent paid date first.
+ * Bills with no paid date come last, latest due first.
+ */
+export function recentlyPaid(
+  bills: Bill[],
+  count: number = RECENTLY_PAID_COUNT,
+): Bill[] {
+  const paid = bills.filter((b) => b.paid);
+  const known = paid
+    .filter((b) => b.paidDate)
+    .sort((a, b) => b.paidDate!.localeCompare(a.paidDate!));
+  const unknown = paid
+    .filter((b) => !b.paidDate)
+    .sort((a, b) => b.dueDate.localeCompare(a.dueDate));
+  return [...known, ...unknown].slice(0, count);
+}
+
+/** "Paid on Sunday 8 November", or "Paid (date not recorded)" for older Bills. */
+export function paidWords(bill: Bill): string {
+  return bill.paidDate
+    ? `Paid on ${formatLocalDate(bill.paidDate, DAY_DATE)}`
+    : "Paid (date not recorded)";
 }

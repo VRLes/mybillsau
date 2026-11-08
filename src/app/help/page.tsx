@@ -100,9 +100,11 @@ export default function HelpPage() {
 
       <Topic
         id="history"
-        title="Paid bills history"
+        title="Paid Bills"
         steps={[
-          "Tap This financial year or Last financial year to see your paid bills. A financial year runs from 1 July to 30 June.",
+          "The bills you paid most recently are at the top, with the day you marked each one paid.",
+          "Bills paid before the app kept paid dates say Paid (date not recorded).",
+          "For your tax agent, go down to For tax time. Tap This financial year or Last financial year to see your paid bills. A financial year runs from 1 July to 30 June.",
           "Or choose your own start and end dates.",
           "The total of the bills shown is at the top.",
           "To print or save a PDF for your tax agent, tap Print this list. For help, tap How do I print or save a PDF? just above it.",
