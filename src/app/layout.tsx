@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { BottomBar } from "@/components/BottomBar";
+import { HelpButton } from "@/components/HelpButton";
+import { SavedTheme } from "@/components/SavedTheme";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,12 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Bill Toolkit",
+  title: "My Bills",
   description:
     "A simple bill tracker, calculator and unit converter, made easy to read and use.",
   // This is the name shown under the icon on an iPhone home screen
   appleWebApp: {
-    title: "Bill Toolkit",
+    title: "My Bills",
   },
 };
 
@@ -28,7 +31,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      {/* Room at the bottom so the bottom bar never covers the end of a page */}
+      <body className="min-h-full flex flex-col bg-[var(--bg-page)] pb-[calc(6rem+env(safe-area-inset-bottom))] print:pb-0">
+        <SavedTheme />
+        <HelpButton />
+        {children}
+        <BottomBar />
+      </body>
     </html>
   );
 }

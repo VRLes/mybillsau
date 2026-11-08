@@ -45,26 +45,10 @@ export default function HistoryPage() {
   const total = paidBillsInRange.reduce((sum, b) => sum + b.amount, 0);
 
   return (
-    <main className="min-h-screen bg-[var(--bg-page)] p-8 max-w-2xl mx-auto">
-      <Link
-        href="/"
-        className="print:hidden inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-all mb-6"
-      >
-        ← Back to My Bills
-      </Link>
-
+    <main className="min-h-screen bg-[var(--bg-page)] px-4 py-6 sm:p-8 max-w-2xl mx-auto w-full">
       <h1 className="text-4xl font-bold mb-6 text-[var(--text-primary)]">
         Paid Bills
       </h1>
-
-      <div className="print:hidden mb-6">
-        <Link
-          href="/help#history"
-          className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-full px-5 py-2 shadow-md hover:shadow-lg transition-all"
-        >
-          How does this work?
-        </Link>
-      </div>
 
       <section aria-labelledby="recent-heading" className="print:hidden mb-10">
         <h2
