@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Bill } from "../types/bill";
 import {
+  addBill,
   billStatus,
   billsDueOn,
   dueSoonUntil,
@@ -125,6 +126,36 @@ describe("Mark as Paid", () => {
       bill({ id: "a" }),
       bill({ id: "new", name: "Phone" }),
     ]);
+  });
+});
+
+describe("Adding a Bill", () => {
+  it("adds a new unpaid Bill with the details given, keeping the others", () => {
+    const existing = [bill({ id: "a" })];
+    const bills = addBill(
+      existing,
+      { name: "Water", amount: 85.2, dueDate: "2026-11-12", category: "water" },
+      "new",
+    );
+    expect(bills).toEqual([
+      bill({ id: "a" }),
+      { id: "new", name: "Water", amount: 85.2, dueDate: "2026-11-12", paid: false, category: "water" },
+    ]);
+  });
+
+  it("the new Bill lands in the right group", () => {
+    const bills = addBill(
+      [],
+      { name: "Phone", amount: 40, dueDate: "2026-11-10", category: "phone" },
+      "new",
+    );
+    expect(summarise(bills, "2026-11-08").dueSoon.map((b) => b.id)).toEqual(["new"]);
+  });
+
+  it("leaves the list it was given alone", () => {
+    const existing = [bill({ id: "a" })];
+    addBill(existing, { name: "Rent", amount: 400, dueDate: "2026-11-08", category: "rent" }, "new");
+    expect(existing).toEqual([bill({ id: "a" })]);
   });
 });
 

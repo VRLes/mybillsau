@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Bill, BillCategory } from "@/types/bill";
+import Link from "next/link";
+import { BillCategory } from "@/types/bill";
+import type { NewBill } from "@/lib/bills";
 
 const categories: { value: BillCategory; label: string }[] = [
   { value: "electricity", label: "Electricity" },
@@ -14,7 +16,8 @@ const categories: { value: BillCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-export function AddBillForm({ onAdd }: { onAdd: (bill: Bill) => void }) {
+/** The Add a bill fields. Saving is left to the page, through the bills module. */
+export function AddBillForm({ onSave }: { onSave: (details: NewBill) => void }) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -24,19 +27,7 @@ export function AddBillForm({ onAdd }: { onAdd: (bill: Bill) => void }) {
     e.preventDefault();
     if (!name || !amount || !dueDate) return;
 
-    onAdd({
-      id: Date.now().toString(),
-      name,
-      amount: parseFloat(amount),
-      dueDate,
-      paid: false,
-      category,
-    });
-
-    setName("");
-    setAmount("");
-    setDueDate("");
-    setCategory("other");
+    onSave({ name, amount: parseFloat(amount), dueDate, category });
   }
 
   return (
@@ -44,10 +35,6 @@ export function AddBillForm({ onAdd }: { onAdd: (bill: Bill) => void }) {
       onSubmit={handleSubmit}
       className="bg-[var(--bg-card)] rounded-2xl shadow-md p-6 mb-6 space-y-4"
     >
-      <h2 className="text-2xl font-semibold text-[var(--text-primary)]">
-        Add a Bill
-      </h2>
-
       <div>
         <label className="block text-base font-medium mb-1 text-[var(--text-primary)]">
           Bill name
@@ -108,8 +95,15 @@ export function AddBillForm({ onAdd }: { onAdd: (bill: Bill) => void }) {
         type="submit"
         className="w-full bg-[var(--accent-button-bg)] text-white text-xl font-semibold rounded-xl py-4 shadow-md hover:bg-[var(--accent-button-hover)] hover:shadow-lg transition-all"
       >
-        Add Bill
+        Save bill
       </button>
+
+      <Link
+        href="/"
+        className="block w-full text-center bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-xl font-medium rounded-xl py-4 shadow-md hover:shadow-lg transition-all"
+      >
+        Cancel, don&apos;t save
+      </Link>
     </form>
   );
 }

@@ -48,6 +48,7 @@ src/
 | Route | Section | Notes |
 |---|---|---|
 | `/` | My Bills | Main dashboard — bill list, summary, calendar |
+| `/add` | Add a bill | Its own page, opened from "+ Add a bill"; Save or Cancel both return to My Bills |
 | `/history` | Paid Bills | Recently paid first (paid date, most recent first); financial-year lists and printing under "For tax time" |
 
 ---
@@ -57,7 +58,7 @@ src/
 | Component | Purpose |
 |---|---|
 | `BillIcon` | Category icon for each bill |
-| `AddBillForm` | Form to add a new bill |
+| `AddBillForm` | The fields on the Add a bill page (`/add`); saving goes through `addBill` in the bills module |
 | `TodayAnswer` | Today's date and the answer to "Do I need to pay anything soon?" |
 | `BillGroups` | Bills grouped Overdue / Due today / Due in the next 7 days / Later / Paid |
 | `CalendarView` | Visual calendar of bill due dates |

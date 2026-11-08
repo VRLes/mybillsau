@@ -130,6 +130,14 @@ export function unpaidBills(bills: Bill[]): Bill[] {
   return bills.filter((b) => !b.paid);
 }
 
+/** What the Person fills in on the Add a bill page. */
+export type NewBill = Pick<Bill, "name" | "amount" | "dueDate" | "category">;
+
+/** Adds a new, unpaid Bill to the end of the list. */
+export function addBill(bills: Bill[], details: NewBill, id: string): Bill[] {
+  return [...bills, { id, ...details, paid: false }];
+}
+
 /**
  * What Undo needs to put a Mark as Paid back: the Bill as it was just before.
  * Repeating bills (#10) will add the next Bill that appeared, so Undo can remove it.
