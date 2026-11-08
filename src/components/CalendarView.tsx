@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Bill } from "@/types/bill";
+import { billStatus, billsDueOn, toLocalDate, todayLocal } from "@/lib/bills";
 import {
   ChevronLeft,
   ChevronRight,
@@ -39,45 +40,28 @@ export function CalendarView({
     return cells;
   }, [currentMonth]);
 
+  const today = todayLocal();
+
   function billsOnDay(date: Date) {
-    return bills.filter((b) => {
-      const due = new Date(b.dueDate);
-      return (
-        due.getFullYear() === date.getFullYear() &&
-        due.getMonth() === date.getMonth() &&
-        due.getDate() === date.getDate()
-      );
-    });
+    return billsDueOn(bills, toLocalDate(date));
   }
 
   function isToday(date: Date) {
-    const today = new Date();
-    return (
-      date.getFullYear() === today.getFullYear() &&
-      date.getMonth() === today.getMonth() &&
-      date.getDate() === today.getDate()
-    );
+    return toLocalDate(date) === today;
   }
 
   function dayStatus(dayBills: Bill[]): "overdue" | "due" | "paid" {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const isOverdue = dayBills.some(
-      (b) => !b.paid && new Date(b.dueDate) < today,
-    );
-    const hasUnpaid = dayBills.some((b) => !b.paid);
-
-    if (isOverdue) return "overdue";
-    if (hasUnpaid) return "due";
+    const statuses = dayBills.map((b) => billStatus(b, today));
+    if (statuses.includes("overdue")) return "overdue";
+    if (statuses.some((s) => s !== "paid")) return "due";
     return "paid";
   }
 
   function StatusIcon({ status }: { status: "overdue" | "due" | "paid" }) {
     if (status === "overdue")
-      return <AlertCircle className="w-3.5 h-3.5 text-red-500" />;
+      return <AlertCircle className="w-3.5 h-3.5 text-[var(--status-overdue-border)]" />;
     if (status === "due")
-      return <Clock className="w-3.5 h-3.5 text-amber-500" />;
+      return <Clock className="w-3.5 h-3.5 text-[var(--accent-text)]" />;
     return <Check className="w-3.5 h-3.5 text-[var(--calendar-paid-dot)]" />;
   }
 
@@ -158,10 +142,10 @@ export function CalendarView({
 
       <div className="flex items-center gap-4 mt-4 text-sm text-[var(--text-secondary)]">
         <span className="flex items-center gap-1">
-          <AlertCircle className="w-3.5 h-3.5 text-red-500" /> Overdue
+          <AlertCircle className="w-3.5 h-3.5 text-[var(--status-overdue-border)]" /> Overdue
         </span>
         <span className="flex items-center gap-1">
-          <Clock className="w-3.5 h-3.5 text-amber-500" /> Due
+          <Clock className="w-3.5 h-3.5 text-[var(--accent-text)]" /> Due
         </span>
         <span className="flex items-center gap-1">
           <Check className="w-3.5 h-3.5 text-[var(--calendar-paid-dot)]" /> Paid

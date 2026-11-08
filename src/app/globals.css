@@ -17,6 +17,10 @@
   --calendar-today-border: #a6652e;
   --calendar-hover-bg: #f0e4d0;
   --calendar-paid-dot: #a6652e;
+  /* Overdue is a calm amber in every colour theme, never red */
+  --status-overdue-bg: #fdf3e1;
+  --status-overdue-border: #e0a84a;
+  --status-overdue-text: #7a4a0e;
 }
 
 .dark {
@@ -36,6 +40,9 @@
   --calendar-today-border: #e0a96d;
   --calendar-hover-bg: #2e251a;
   --calendar-paid-dot: #e0a96d;
+  --status-overdue-bg: #3a2a12;
+  --status-overdue-border: #b8862e;
+  --status-overdue-text: #f2c879;
 }
 
 body {
