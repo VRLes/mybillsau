@@ -161,7 +161,7 @@
 - Category icons (electricity, water, internet, phone, rent, insurance, subscription, other) via lucide-react — generic icons chosen over real company logos for simplicity
 - Sage & cream visual theme (chosen over "deep ocean" and "terracotta sunset" options)
 - Light/dark mode toggle — plain-worded button ("Switch to dark/light mode"), not icon-only, remembers choice, shows one-time explanation on first use. Dark mode uses a neutral charcoal background with sage as accent only (not sage-on-sage, for contrast reasons)
-- Summary strip: due this week / overdue / total owing
+- Summary strip: due in the next 7 days / overdue / total owing (replaced in #4 by the Today line and summary answer)
 - Reminder banner: plain-language cards for overdue and due-soon bills, friendly "all caught up" message when nothing's due
 - Interactive month calendar: today highlighted, each day shows a status icon (not just colour) — circle+exclamation mark for overdue (softened from a warning triangle to avoid alarming users), clock for due soon, checkmark for paid. Tapping a day scrolls to and highlights the matching bill(s) below
 - Paid Bills History page (`/history`): financial year presets (this FY / last FY, 1 July–30 June), optional custom date range, running total, print button (browser print, auto-hides buttons/nav when printing) — built for tax-agent handouts

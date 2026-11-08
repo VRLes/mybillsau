@@ -68,20 +68,61 @@ export interface BillsSummary {
   overdue: Bill[];
   dueToday: Bill[];
   dueSoon: Bill[];
+  later: Bill[];
+  /**
+   * What the summary answer is built from: how many Bills to pay now or in
+   * the next 7 days (Overdue, Due today, Due soon), and the one due soonest.
+   */
+  toPay: { count: number; next: Bill | undefined };
   /** Sum of every unpaid Bill, whenever it is due. */
   totalOwing: number;
+}
+
+/** Earliest due first; Bills due the same day keep their saved order. */
+function byDueDate(bills: Bill[]): Bill[] {
+  return [...bills].sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 }
 
 /** The answer to "Do I need to pay anything soon?" for a given today. */
 export function summarise(bills: Bill[], today: LocalDate): BillsSummary {
   const withStatus = (status: BillStatus) =>
-    bills.filter((b) => billStatus(b, today) === status);
+    byDueDate(bills.filter((b) => billStatus(b, today) === status));
+  const overdue = withStatus("overdue");
+  const dueToday = withStatus("due-today");
+  const dueSoon = withStatus("due-soon");
+  // Groups are already in date order, so joining them keeps the soonest first
+  const toPay = [...overdue, ...dueToday, ...dueSoon];
   return {
-    overdue: withStatus("overdue"),
-    dueToday: withStatus("due-today"),
-    dueSoon: withStatus("due-soon"),
+    overdue,
+    dueToday,
+    dueSoon,
+    later: withStatus("later"),
+    toPay: { count: toPay.length, next: toPay[0] },
     totalOwing: unpaidBills(bills).reduce((sum, b) => sum + b.amount, 0),
   };
+}
+
+/** Weekday, day and month, e.g. "Sunday 8 November". */
+export const DAY_DATE = {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+} as const satisfies Intl.DateTimeFormatOptions;
+
+/**
+ * When an unpaid Bill is due, in plain words: "due today", "due tomorrow",
+ * "due Thursday 12 November", or "was due Tuesday 3 November" if Overdue.
+ */
+export function dueWords(bill: Bill, today: LocalDate): string {
+  if (bill.dueDate === today) return "due today";
+  if (bill.dueDate === addDays(today, 1)) return "due tomorrow";
+  const date = formatLocalDate(bill.dueDate, DAY_DATE);
+  return bill.dueDate < today ? `was due ${date}` : `due ${date}`;
+}
+
+/** The last day that still counts as Due soon, for "Due by <date>". */
+export function dueSoonUntil(today: LocalDate): LocalDate {
+  return addDays(today, DUE_SOON_DAYS);
 }
 
 /** Bills not yet marked paid, in their saved order. */

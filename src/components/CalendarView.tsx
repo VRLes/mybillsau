@@ -59,9 +59,9 @@ export function CalendarView({
 
   function StatusIcon({ status }: { status: "overdue" | "due" | "paid" }) {
     if (status === "overdue")
-      return <AlertCircle className="w-3.5 h-3.5 text-red-500" />;
+      return <AlertCircle className="w-3.5 h-3.5 text-[var(--status-overdue-border)]" />;
     if (status === "due")
-      return <Clock className="w-3.5 h-3.5 text-amber-500" />;
+      return <Clock className="w-3.5 h-3.5 text-[var(--accent-text)]" />;
     return <Check className="w-3.5 h-3.5 text-[var(--calendar-paid-dot)]" />;
   }
 
@@ -142,10 +142,10 @@ export function CalendarView({
 
       <div className="flex items-center gap-4 mt-4 text-sm text-[var(--text-secondary)]">
         <span className="flex items-center gap-1">
-          <AlertCircle className="w-3.5 h-3.5 text-red-500" /> Overdue
+          <AlertCircle className="w-3.5 h-3.5 text-[var(--status-overdue-border)]" /> Overdue
         </span>
         <span className="flex items-center gap-1">
-          <Clock className="w-3.5 h-3.5 text-amber-500" /> Due
+          <Clock className="w-3.5 h-3.5 text-[var(--accent-text)]" /> Due
         </span>
         <span className="flex items-center gap-1">
           <Check className="w-3.5 h-3.5 text-[var(--calendar-paid-dot)]" /> Paid

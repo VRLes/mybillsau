@@ -58,7 +58,8 @@ src/
 |---|---|
 | `BillIcon` | Category icon for each bill |
 | `AddBillForm` | Form to add a new bill |
-| `ReminderBanner` | Banner showing upcoming/overdue alerts |
+| `TodayAnswer` | Today's date and the answer to "Do I need to pay anything soon?" |
+| `BillGroups` | Bills grouped Overdue / Due today / Due in the next 7 days / Later / Paid |
 | `CalendarView` | Visual calendar of bill due dates |
 | `ThemeToggle` | Dark/light mode switch |
 
@@ -66,11 +67,12 @@ src/
 
 ## Key Features
 
-- Summary strip — 3 cards: Due this week / Overdue / Total owing
+- Today line and summary answer — "Today is <date>", then "Nothing to pay in the next 7 days" or "2 bills to pay — <next Bill>"
+- Bill groups — Overdue (calm amber), Due today, Due in the next 7 days, Later, Paid
+- Calendar hidden behind "Show calendar"
 - Calendar view — click a day to highlight bills due that day
 - Mark as Paid — toggles paid status, moves to history
 - Delete bill — confirms before deleting
-- Reminder banner — shows upcoming and overdue bills
 - Dark/light theme via ThemeToggle
 
 ---

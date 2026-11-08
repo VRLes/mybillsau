@@ -3,6 +3,8 @@ import type { Bill } from "../types/bill";
 import {
   billStatus,
   billsDueOn,
+  dueSoonUntil,
+  dueWords,
   financialYear,
   formatLocalDate,
   loadBills,
@@ -106,6 +108,8 @@ describe("Summary", () => {
       overdue: [],
       dueToday: [],
       dueSoon: [],
+      later: [],
+      toPay: { count: 0, next: undefined },
       totalOwing: 0,
     });
   });
@@ -133,8 +137,100 @@ describe("Summary", () => {
     expect(names(s.overdue)).toEqual(["Rent"]);
     expect(names(s.dueToday)).toEqual(["Water"]);
     expect(names(s.dueSoon)).toEqual(["Phone", "Internet"]);
+    expect(names(s.later)).toEqual(["Insurance"]);
     // 400 + 45.50 + 30 + 79.99 + 200 (Gas is paid)
     expect(s.totalOwing).toBeCloseTo(755.49, 2);
+  });
+});
+
+describe("Summary answer: what to pay soon", () => {
+  const today = "2026-11-08";
+  const names = (bills: Bill[]) => bills.map((b) => b.name);
+
+  it("counts nothing when every Bill is Later or Paid", () => {
+    const s = summarise(
+      [
+        bill({ dueDate: "2026-11-16" }),
+        bill({ id: "p", dueDate: "2026-11-09", paid: true }),
+      ],
+      today,
+    );
+    expect(s.toPay).toEqual({ count: 0, next: undefined });
+  });
+
+  it("counts Overdue, Due today and Due soon Bills, not Later ones", () => {
+    const s = summarise(
+      [
+        bill({ id: "a", dueDate: "2026-11-01" }),
+        bill({ id: "b", dueDate: "2026-11-08" }),
+        bill({ id: "c", dueDate: "2026-11-15" }),
+        bill({ id: "d", dueDate: "2026-11-16" }),
+      ],
+      today,
+    );
+    expect(s.toPay.count).toBe(3);
+  });
+
+  it("the next Bill is the one due soonest, even if saved last", () => {
+    const s = summarise(
+      [
+        bill({ id: "a", name: "Phone", dueDate: "2026-11-12" }),
+        bill({ id: "b", name: "Electricity", amount: 120, dueDate: "2026-11-10" }),
+      ],
+      today,
+    );
+    expect(s.toPay.count).toBe(2);
+    expect(s.toPay.next?.name).toBe("Electricity");
+  });
+
+  it("an Overdue Bill comes before one Due today", () => {
+    const s = summarise(
+      [
+        bill({ id: "a", name: "Water", dueDate: "2026-11-08" }),
+        bill({ id: "b", name: "Rent", dueDate: "2026-11-03" }),
+      ],
+      today,
+    );
+    expect(s.toPay.next?.name).toBe("Rent");
+  });
+
+  it("each group lists Bills earliest due first", () => {
+    const s = summarise(
+      [
+        bill({ id: "a", name: "Phone", dueDate: "2026-11-14" }),
+        bill({ id: "b", name: "Gas", dueDate: "2026-11-09" }),
+      ],
+      today,
+    );
+    expect(names(s.dueSoon)).toEqual(["Gas", "Phone"]);
+  });
+});
+
+describe("Saying when a Bill is due", () => {
+  const today = "2026-11-08";
+
+  it("says today and tomorrow in plain words", () => {
+    expect(dueWords(bill({ dueDate: "2026-11-08" }), today)).toBe("due today");
+    expect(dueWords(bill({ dueDate: "2026-11-09" }), today)).toBe("due tomorrow");
+  });
+
+  it("gives the weekday and date for later days, so a week away can't be mistaken for today", () => {
+    expect(dueWords(bill({ dueDate: "2026-11-12" }), today)).toBe(
+      "due Thursday 12 November",
+    );
+    expect(dueWords(bill({ dueDate: "2026-11-15" }), today)).toBe(
+      "due Sunday 15 November",
+    );
+  });
+
+  it("says 'was due' for an Overdue Bill", () => {
+    expect(dueWords(bill({ dueDate: "2026-11-03" }), today)).toBe(
+      "was due Tuesday 3 November",
+    );
+  });
+
+  it("Due soon runs until 7 days after today", () => {
+    expect(dueSoonUntil(today)).toBe("2026-11-15");
   });
 });
 
