@@ -75,6 +75,18 @@ export default function HelpPage() {
       />
 
       <Topic
+        id="repeating"
+        title="Bills that come back"
+        steps={[
+          "When you add a bill, choose How often: Just once, Every month, Every 3 months or Every year.",
+          "When you mark a repeating bill paid, the next one appears by itself, due one month, 3 months or a year later.",
+          "Its amount is copied from last time and shows as \"about\". Tap \"Change if different\" to type the real amount, or keep it.",
+          "Only one of each repeating bill is shown at a time. If you miss one, it stays as one overdue bill, never a pile.",
+          "Tapped paid by mistake? Tap Undo, and the next one goes away again.",
+        ]}
+      />
+
+      <Topic
         id="calculator"
         title="The calculator"
         steps={[

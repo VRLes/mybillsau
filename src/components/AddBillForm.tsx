@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BillCategory } from "@/types/bill";
+import type { BillCategory, HowOften } from "@/types/bill";
 import type { NewBill } from "@/lib/bills";
 
 const categories: { value: BillCategory; label: string }[] = [
@@ -16,18 +16,26 @@ const categories: { value: BillCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
+const schedules: { value: HowOften; label: string }[] = [
+  { value: "once", label: "Just once" },
+  { value: "monthly", label: "Every month" },
+  { value: "quarterly", label: "Every 3 months" },
+  { value: "yearly", label: "Every year" },
+];
+
 /** The Add a bill fields. Saving is left to the page, through the bills module. */
 export function AddBillForm({ onSave }: { onSave: (details: NewBill) => void }) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [category, setCategory] = useState<BillCategory>("other");
+  const [howOften, setHowOften] = useState<HowOften>("once");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name || !amount || !dueDate) return;
 
-    onSave({ name, amount: parseFloat(amount), dueDate, category });
+    onSave({ name, amount: parseFloat(amount), dueDate, category, howOften });
   }
 
   return (
@@ -90,6 +98,40 @@ export function AddBillForm({ onSave }: { onSave: (details: NewBill) => void }) 
           ))}
         </select>
       </div>
+
+      {/* Big tap-target choices rather than a dropdown, so every option is in view */}
+      <fieldset>
+        <legend className="block text-base font-medium mb-1 text-[var(--text-primary)]">
+          How often
+        </legend>
+        <div className="grid grid-cols-2 gap-3">
+          {schedules.map((s) => (
+            <label
+              key={s.value}
+              className={`flex items-center gap-3 border-2 rounded-xl p-4 text-lg cursor-pointer text-[var(--text-primary)] ${
+                howOften === s.value
+                  ? "border-[var(--accent-button-bg)] font-semibold"
+                  : "border-[var(--border-default)]"
+              }`}
+            >
+              <input
+                type="radio"
+                name="howOften"
+                value={s.value}
+                checked={howOften === s.value}
+                onChange={() => setHowOften(s.value)}
+                className="w-6 h-6 accent-[var(--accent-button-bg)]"
+              />
+              {s.label}
+            </label>
+          ))}
+        </div>
+        {howOften !== "once" && (
+          <p className="text-base text-[var(--text-secondary)] mt-2">
+            When you mark it paid, the next one appears by itself.
+          </p>
+        )}
+      </fieldset>
 
       <button
         type="submit"

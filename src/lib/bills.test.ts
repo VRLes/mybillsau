@@ -4,14 +4,17 @@ import {
   addBill,
   billStatus,
   billsDueOn,
+  confirmAmount,
   deleteBill,
   dueSoonUntil,
   dueWords,
   financialYear,
   formatLocalDate,
+  howOften,
   loadBills,
   markPaid,
   markUnpaid,
+  nextDueDate,
   paidBillsBetween,
   paidWords,
   recentlyPaid,
@@ -516,5 +519,149 @@ describe("Showing dates", () => {
     expect(formatLocalDate("2026-07-01", { day: "numeric", month: "long", year: "numeric" })).toBe(
       "1 July 2026",
     );
+  });
+});
+
+describe("Repeating bills: the next due date", () => {
+  it("Every month is the same day next month", () => {
+    expect(nextDueDate("2026-11-15", "monthly")).toBe("2026-12-15");
+  });
+
+  it("Every month crosses into the new year", () => {
+    expect(nextDueDate("2026-12-20", "monthly")).toBe("2027-01-20");
+  });
+
+  it("Every 3 months is the same day three months later", () => {
+    expect(nextDueDate("2026-11-15", "quarterly")).toBe("2027-02-15");
+  });
+
+  it("Every year is the same day next year", () => {
+    expect(nextDueDate("2026-11-15", "yearly")).toBe("2027-11-15");
+  });
+
+  it("31 January goes to the last day of February, never into March", () => {
+    expect(nextDueDate("2027-01-31", "monthly")).toBe("2027-02-28");
+    expect(nextDueDate("2028-01-31", "monthly")).toBe("2028-02-29"); // leap year
+  });
+
+  it("31 May every 3 months goes to 31 August, and 30 November to 28 February", () => {
+    expect(nextDueDate("2026-05-31", "quarterly")).toBe("2026-08-31");
+    expect(nextDueDate("2026-11-30", "quarterly")).toBe("2027-02-28");
+  });
+
+  it("29 February every year goes to 28 February in a year that isn't a leap year", () => {
+    expect(nextDueDate("2028-02-29", "yearly")).toBe("2029-02-28");
+  });
+
+  it("a clamped series goes back to its own day when the month is long enough", () => {
+    // Due on the 31st: Feb is clamped to the 28th, but March is the 31st again
+    expect(nextDueDate("2027-02-28", "monthly", 31)).toBe("2027-03-31");
+    // Due on 29 Feb: the next leap year is the 29th again
+    expect(nextDueDate("2031-02-28", "yearly", 29)).toBe("2032-02-29");
+  });
+});
+
+describe("Repeating bills: How often", () => {
+  it("Add a bill keeps the How often chosen, starting a series of its own", () => {
+    const [added] = addBill(
+      [],
+      { name: "Rent", amount: 400, dueDate: "2026-11-15", category: "rent", howOften: "monthly" },
+      "r1",
+    );
+    expect(howOften(added)).toBe("monthly");
+    expect(added.seriesId).toBe("r1");
+  });
+
+  it("a Just once Bill is saved the same way Bills always were", () => {
+    const [added] = addBill(
+      [],
+      { name: "Plumber", amount: 150, dueDate: "2026-11-15", category: "other", howOften: "once" },
+      "p1",
+    );
+    expect(added).toEqual({
+      id: "p1", name: "Plumber", amount: 150, dueDate: "2026-11-15", paid: false, category: "other",
+    });
+  });
+
+  it("Bills saved before How often existed load as Just once", () => {
+    const saved =
+      '[{"id":"1","name":"Electricity","amount":120.5,"dueDate":"2026-11-15","paid":false,"category":"electricity"}]';
+    const [loaded] = loadBills({ getItem: () => saved, setItem: () => {} });
+    expect(howOften(loaded)).toBe("once");
+  });
+});
+
+describe("Repeating bills: the next Bill", () => {
+  const rent = bill({
+    id: "r1", name: "Rent", amount: 400, dueDate: "2026-11-15", category: "rent",
+    howOften: "monthly", seriesId: "r1", dueDay: 15,
+  });
+
+  it("marking a Repeating bill paid adds exactly one next Bill, one period later, with an Estimated amount", () => {
+    const { bills } = markPaid([rent], "r1", "2026-11-14");
+    expect(bills).toHaveLength(2);
+    const next = bills[1];
+    expect(next).toMatchObject({
+      name: "Rent", amount: 400, category: "rent", dueDate: "2026-12-15",
+      paid: false, howOften: "monthly", seriesId: "r1", dueDay: 15, estimated: true,
+    });
+    expect(next).not.toHaveProperty("paidDate");
+    expect(next.id).not.toBe("r1");
+  });
+
+  it("the next Bill copies the last amount, whatever it was", () => {
+    const { bills } = markPaid([{ ...rent, amount: 412.35 }], "r1", "2026-11-14");
+    expect(bills[1].amount).toBe(412.35);
+  });
+
+  it("a series due on the 31st keeps coming back to the 31st", () => {
+    const power = { ...rent, dueDate: "2027-01-31", dueDay: 31 };
+    const afterJan = markPaid([power], "r1", "2027-01-30").bills;
+    const feb = afterJan[1];
+    expect(feb.dueDate).toBe("2027-02-28");
+    const mar = markPaid(afterJan, feb.id, "2027-02-27").bills[2];
+    expect(mar.dueDate).toBe("2027-03-31");
+  });
+
+  it("a Just once Bill adds nothing when paid", () => {
+    expect(markPaid([bill({ id: "a" })], "a", "2026-11-08").bills).toHaveLength(1);
+  });
+
+  it("Undo of Mark as Paid also removes the next Bill", () => {
+    const marked = markPaid([rent], "r1", "2026-11-14");
+    expect(undoMarkPaid(marked.bills, marked.undo!)).toEqual([rent]);
+  });
+
+  it("never two open Bills in one series: paying again after the next one exists adds no more", () => {
+    // e.g. marked paid, unpaid by mistake some other way, then paid again
+    const next = { ...rent, id: "r2", dueDate: "2026-12-15", estimated: true };
+    const { bills } = markPaid([rent, next], "r1", "2026-11-14");
+    expect(bills.filter((b) => b.seriesId === "r1" && !b.paid)).toEqual([next]);
+  });
+
+  it("marking a paid Repeating bill unpaid again takes back the next Bill it brought in", () => {
+    const paid = markPaid([rent], "r1", "2026-11-14").bills;
+    const unpaid = markUnpaid(paid, "r1");
+    expect(unpaid).toEqual([rent]);
+  });
+});
+
+describe("Repeating bills: the Estimated amount", () => {
+  const next = bill({ id: "r2", amount: 400, howOften: "monthly", seriesId: "r1", estimated: true });
+
+  it("changing it sets the new amount and it is no longer an estimate", () => {
+    const [changed] = confirmAmount([next], "r2", 415.5);
+    expect(changed.amount).toBe(415.5);
+    expect(changed).not.toHaveProperty("estimated");
+  });
+
+  it("keeping it leaves the amount and it is no longer an estimate", () => {
+    const [kept] = confirmAmount([next], "r2", 400);
+    expect(kept).toEqual(bill({ id: "r2", amount: 400, howOften: "monthly", seriesId: "r1" }));
+  });
+
+  it("leaves every other Bill alone", () => {
+    const other = bill({ id: "x", estimated: true });
+    expect(confirmAmount([next, other], "r2", 1)[1]).toBe(other);
   });
 });

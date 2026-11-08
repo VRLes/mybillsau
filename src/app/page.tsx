@@ -3,10 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Bill } from "@/types/bill";
 import {
+  confirmAmount,
+  DAY_DATE,
   deleteBill,
+  formatLocalDate,
   loadBills,
   markPaid,
   markUnpaid,
+  nextBillFrom,
   saveBills,
   summarise,
   todayLocal,
@@ -84,6 +88,8 @@ export default function Home() {
   // Worked out on every draw, never remembered, so it can't go stale overnight
   const today = todayLocal();
   const summary = summarise(bills, today);
+  // The next Repeating bill that the last Mark as Paid brought in, if any
+  const nextDue = undo ? nextBillFrom(bills, undo) : undefined;
 
   function togglePaid(id: string) {
     const bill = bills.find((b) => b.id === id);
@@ -105,6 +111,10 @@ export default function Home() {
     if (undo) setBills((prev) => undoMarkPaid(prev, undo));
     clearTimeout(undoTimer.current);
     setUndo(null);
+  }
+
+  function handleConfirmAmount(id: string, amount: number) {
+    setBills((prev) => confirmAmount(prev, id, amount));
   }
 
   function askToDelete(id: string) {
@@ -158,6 +168,7 @@ export default function Home() {
         highlightedIds={highlightedIds}
         onTogglePaid={togglePaid}
         onDelete={askToDelete}
+        onConfirmAmount={handleConfirmAmount}
       />
 
       <div className="flex flex-wrap gap-3 mt-8 mb-6">
@@ -185,7 +196,11 @@ export default function Home() {
 
       <HomeScreenPill />
 
-      <UndoMessage shown={undo !== null} onUndo={handleUndo} />
+      <UndoMessage
+        shown={undo !== null}
+        next={nextDue && formatLocalDate(nextDue.dueDate, DAY_DATE)}
+        onUndo={handleUndo}
+      />
 
       <DeleteQuestion
         bill={askingToDelete}

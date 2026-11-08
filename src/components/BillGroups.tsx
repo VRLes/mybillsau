@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Bill } from "@/types/bill";
 import {
   DAY_DATE,
   dueSoonUntil,
   formatLocalDate,
   type BillsSummary,
+  howOften,
   type LocalDate,
 } from "@/lib/bills";
 import { BillIcon } from "@/components/BillIcon";
@@ -13,7 +14,14 @@ interface BillActions {
   highlightedIds: Set<string>;
   onTogglePaid: (id: string) => void;
   onDelete: (id: string) => void;
+  onConfirmAmount: (id: string, amount: number) => void;
 }
+
+const HOW_OFTEN_WORDS = {
+  monthly: "Every month",
+  quarterly: "Every 3 months",
+  yearly: "Every year",
+} as const;
 
 /**
  * Bills grouped by how soon they need paying: Overdue, Due today,
@@ -87,7 +95,9 @@ function BillCard({
   highlightedIds,
   onTogglePaid,
   onDelete,
+  onConfirmAmount,
 }: BillActions & { bill: Bill; overdue: boolean }) {
+  const schedule = howOften(bill);
   const look = overdue
     ? "bg-[var(--status-overdue-bg)] border-2 border-[var(--status-overdue-border)]"
     : "bg-[var(--bg-card)]";
@@ -107,10 +117,17 @@ function BillCard({
         </p>
         <p className="text-[var(--text-secondary)]">
           Due {formatLocalDate(bill.dueDate, DAY_DATE)}
+          {schedule !== "once" && ` · ${HOW_OFTEN_WORDS[schedule]}`}
         </p>
+        {bill.estimated && !bill.paid && (
+          <EstimatedAmount bill={bill} onConfirmAmount={onConfirmAmount} />
+        )}
       </div>
       <div className="text-right">
         <p className="text-2xl font-bold text-[var(--text-primary)]">
+          {bill.estimated && !bill.paid && (
+            <span className="text-lg font-semibold">about </span>
+          )}
           ${bill.amount.toFixed(2)}
         </p>
         <button
@@ -127,5 +144,77 @@ function BillCard({
         </button>
       </div>
     </div>
+  );
+}
+
+/**
+ * "About $X — change if different" on a newly appeared Repeating bill. The
+ * amount was copied from last time, so the Person can type the real one, or
+ * keep it. Either way "about" goes away.
+ */
+function EstimatedAmount({
+  bill,
+  onConfirmAmount,
+}: {
+  bill: Bill;
+  onConfirmAmount: (id: string, amount: number) => void;
+}) {
+  const [changing, setChanging] = useState(false);
+  const [amount, setAmount] = useState(bill.amount.toFixed(2));
+  const typed = parseFloat(amount);
+  const amountOk = Number.isFinite(typed) && typed >= 0;
+
+  if (!changing) {
+    return (
+      <p className="text-[var(--text-secondary)] mt-1">
+        About ${bill.amount.toFixed(2)}, same as last time.{" "}
+        <button
+          onClick={() => setChanging(true)}
+          className="text-[var(--accent-text)] font-semibold underline"
+        >
+          Change if different
+        </button>
+      </p>
+    );
+  }
+
+  return (
+    <form
+      className="mt-3 space-y-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (amountOk) onConfirmAmount(bill.id, typed);
+      }}
+    >
+      <label className="block text-base font-medium text-[var(--text-primary)]">
+        Amount this time ($)
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          inputMode="decimal"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          autoFocus
+          className="mt-1 w-full border-2 border-[var(--border-default)] focus:border-[var(--accent-button-bg)] bg-[var(--bg-card)] text-[var(--text-primary)] rounded-xl p-3 text-lg outline-none"
+        />
+      </label>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="submit"
+          disabled={!amountOk}
+          className="bg-[var(--accent-button-bg)] text-white text-lg font-semibold rounded-xl px-5 py-3 min-h-12 disabled:opacity-50"
+        >
+          Save amount
+        </button>
+        <button
+          type="button"
+          onClick={() => onConfirmAmount(bill.id, bill.amount)}
+          className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 min-h-12"
+        >
+          Keep ${bill.amount.toFixed(2)}
+        </button>
+      </div>
+    </form>
   );
 }
