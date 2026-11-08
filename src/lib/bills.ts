@@ -130,6 +130,44 @@ export function unpaidBills(bills: Bill[]): Bill[] {
   return bills.filter((b) => !b.paid);
 }
 
+/**
+ * What Undo needs to put a Mark as Paid back: the Bill as it was just before.
+ * Repeating bills (#10) will add the next Bill that appeared, so Undo can remove it.
+ */
+export interface MarkPaidUndo {
+  before: Bill;
+}
+
+/** Marks one Bill paid, with today as its paid date. */
+export function markPaid(
+  bills: Bill[],
+  id: string,
+  today: LocalDate,
+): { bills: Bill[]; undo: MarkPaidUndo | undefined } {
+  const before = bills.find((b) => b.id === id);
+  return {
+    bills: bills.map((b) =>
+      b.id === id ? { ...b, paid: true, paidDate: today } : b,
+    ),
+    undo: before && { before },
+  };
+}
+
+/** Undoes a Mark as Paid, putting that Bill back exactly as it was. */
+export function undoMarkPaid(bills: Bill[], undo: MarkPaidUndo): Bill[] {
+  return bills.map((b) => (b.id === undo.before.id ? undo.before : b));
+}
+
+/** Marks a paid Bill unpaid again, forgetting its paid date. */
+export function markUnpaid(bills: Bill[], id: string): Bill[] {
+  return bills.map((b) => {
+    if (b.id !== id) return b;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { paidDate, ...rest } = b;
+    return { ...rest, paid: false };
+  });
+}
+
 /** The browser-storage key Bills have always been saved under. */
 const STORAGE_KEY = "bills";
 

@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bill } from "@/types/bill";
 import {
   loadBills,
+  markPaid,
+  markUnpaid,
   saveBills,
   summarise,
   todayLocal,
+  undoMarkPaid,
+  type MarkPaidUndo,
 } from "@/lib/bills";
 import { AddBillForm } from "@/components/AddBillForm";
 import { TodayAnswer } from "@/components/TodayAnswer";
@@ -15,7 +19,11 @@ import { CalendarView } from "@/components/CalendarView";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ColorThemeToggle } from "@/components/ColorThemeToggle";
 import { HomeScreenPill } from "@/components/HomeScreenPill";
+import { UndoMessage } from "@/components/UndoMessage";
 import Link from "next/link";
+/** How long "Marked as paid — Undo" stays up. Generous, so nobody has to rush. */
+const UNDO_SECONDS = 8;
+
 export default function Home() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
@@ -23,6 +31,12 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false);
   // The calendar stays out of the way until the Person asks for it
   const [showCalendar, setShowCalendar] = useState(false);
+  // What Undo needs while "Marked as paid — Undo" is showing
+  const [undo, setUndo] = useState<MarkPaidUndo | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Don't leave a timer running after leaving the page
+  useEffect(() => () => clearTimeout(undoTimer.current), []);
 
   useEffect(() => {
     setBills(loadBills(localStorage));
@@ -46,9 +60,25 @@ export default function Home() {
   }
 
   function togglePaid(id: string) {
-    setBills((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, paid: !b.paid } : b)),
-    );
+    const bill = bills.find((b) => b.id === id);
+    if (!bill) return;
+    if (bill.paid) {
+      setBills(markUnpaid(bills, id));
+      return;
+    }
+    // One tap: paid straight away, with today's date, and a chance to undo
+    const result = markPaid(bills, id, todayLocal());
+    setBills(result.bills);
+    if (!result.undo) return;
+    setUndo(result.undo);
+    clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setUndo(null), UNDO_SECONDS * 1000);
+  }
+
+  function handleUndo() {
+    if (undo) setBills((prev) => undoMarkPaid(prev, undo));
+    clearTimeout(undoTimer.current);
+    setUndo(null);
   }
 
   function deleteBill(id: string) {
@@ -149,6 +179,8 @@ export default function Home() {
       </div>
 
       <HomeScreenPill />
+
+      <UndoMessage shown={undo !== null} onUndo={handleUndo} />
 
       <div className="flex flex-wrap gap-3 mb-6">
         <ThemeToggle />
