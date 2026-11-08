@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Bill } from "@/types/bill";
 import {
+  deleteBill,
   loadBills,
   markPaid,
   markUnpaid,
@@ -19,6 +20,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { ColorThemeToggle } from "@/components/ColorThemeToggle";
 import { HomeScreenPill } from "@/components/HomeScreenPill";
 import { UndoMessage } from "@/components/UndoMessage";
+import { DeleteQuestion } from "@/components/DeleteQuestion";
 import Link from "next/link";
 
 /** Brings one Bill into the middle of the screen. */
@@ -43,6 +45,8 @@ export default function Home() {
   // What Undo needs while "Marked as paid — Undo" is showing
   const [undo, setUndo] = useState<MarkPaidUndo | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // The Bill the Person asked to delete, while "Delete the … bill?" is showing
+  const [askingToDelete, setAskingToDelete] = useState<Bill | null>(null);
 
   // Don't leave a timer running after leaving the page
   useEffect(() => () => clearTimeout(undoTimer.current), []);
@@ -103,13 +107,14 @@ export default function Home() {
     setUndo(null);
   }
 
-  function deleteBill(id: string) {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this bill?",
-    );
-    if (confirmed) {
-      setBills((prev) => prev.filter((b) => b.id !== id));
-    }
+  function askToDelete(id: string) {
+    setAskingToDelete(bills.find((b) => b.id === id) ?? null);
+  }
+
+  function handleDeleteYes() {
+    const bill = askingToDelete;
+    if (bill) setBills((prev) => deleteBill(prev, bill.id));
+    setAskingToDelete(null);
   }
 
   function handleSelectDay(dayBills: Bill[]) {
@@ -152,7 +157,7 @@ export default function Home() {
         today={today}
         highlightedIds={highlightedIds}
         onTogglePaid={togglePaid}
-        onDelete={deleteBill}
+        onDelete={askToDelete}
       />
 
       <div className="flex flex-wrap gap-3 mt-8 mb-6">
@@ -181,6 +186,12 @@ export default function Home() {
       <HomeScreenPill />
 
       <UndoMessage shown={undo !== null} onUndo={handleUndo} />
+
+      <DeleteQuestion
+        bill={askingToDelete}
+        onYes={handleDeleteYes}
+        onNo={() => setAskingToDelete(null)}
+      />
 
       <div className="flex flex-wrap gap-3 mb-6">
         <ThemeToggle />

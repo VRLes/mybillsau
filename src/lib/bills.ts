@@ -138,6 +138,11 @@ export function addBill(bills: Bill[], details: NewBill, id: string): Bill[] {
   return [...bills, { id, ...details, paid: false }];
 }
 
+/** Removes one Bill for good. Every other Bill stays as it was, in order. */
+export function deleteBill(bills: Bill[], id: string): Bill[] {
+  return bills.filter((b) => b.id !== id);
+}
+
 /**
  * What Undo needs to put a Mark as Paid back: the Bill as it was just before.
  * Repeating bills (#10) will add the next Bill that appeared, so Undo can remove it.

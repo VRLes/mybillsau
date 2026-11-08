@@ -4,6 +4,7 @@ import {
   addBill,
   billStatus,
   billsDueOn,
+  deleteBill,
   dueSoonUntil,
   dueWords,
   financialYear,
@@ -156,6 +157,24 @@ describe("Adding a Bill", () => {
     const existing = [bill({ id: "a" })];
     addBill(existing, { name: "Rent", amount: 400, dueDate: "2026-11-08", category: "rent" }, "new");
     expect(existing).toEqual([bill({ id: "a" })]);
+  });
+});
+
+describe("Deleting a Bill", () => {
+  it("removes exactly that Bill, keeping the others in order", () => {
+    const bills = [bill({ id: "a" }), bill({ id: "b" }), bill({ id: "c" })];
+    expect(deleteBill(bills, "b")).toEqual([bill({ id: "a" }), bill({ id: "c" })]);
+  });
+
+  it("changes nothing when no Bill has that id", () => {
+    const bills = [bill({ id: "a" })];
+    expect(deleteBill(bills, "missing")).toEqual([bill({ id: "a" })]);
+  });
+
+  it("leaves the list it was given alone", () => {
+    const existing = [bill({ id: "a" }), bill({ id: "b" })];
+    deleteBill(existing, "a");
+    expect(existing).toEqual([bill({ id: "a" }), bill({ id: "b" })]);
   });
 });
 
