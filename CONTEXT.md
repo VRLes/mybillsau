@@ -1,104 +1,67 @@
-# Seniors Bill Tracker — Project Context
+# My Bills
 
-## What This App Is
+A simple bill tracker for older adults that answers one question first: "Do I need to pay anything soon?" It is built for people with memory loss, people new to technology, and people who feel anxious or stressed using it. Technical notes live in `src/docs/project-overview.md`.
 
-A simple, visual bill and subscription tracker designed for seniors. Helps users see what bills are coming up, what's overdue, and what's been paid — at a glance, without confusion.
+## Language
 
-No login required. Data is saved locally in the browser (localStorage).
+### People
 
----
+**Person**:
+The older adult who uses the app day to day to keep track of their own bills. They may have memory loss, be new to technology, feel anxious using it, or have ADHD.
+_Avoid_: User (too vague), senior, elderly user, customer
 
-## Current Status
+**Helper**:
+A family member or carer who sets the app up for the Person (installs it, adds bills, picks a theme) and may check in later. The app must still work without one.
+_Avoid_: Carer, admin, guardian
 
-- MVP complete
-- No npm vulnerabilities
-- Monetisation potential being explored
+### Bills
 
----
+**My Bills**:
+The app's one name, used on the home screen icon, the browser tab and the main screen heading.
+_Avoid_: Bill Toolkit, Seniors Bill Tracker
 
-## Target Users
+**Bill**:
+A single amount the Person needs to pay by a due date, such as one electricity bill.
+_Avoid_: Payment, invoice, subscription (subscription is a category, not a different thing)
 
-- Seniors who want a simple way to track bills and subscriptions
-- Designed for clarity and ease of use — large text, simple layout, no clutter
+**Repeating bill**:
+A Bill that comes back on a regular schedule (every month, every 3 months or every year). Only one is ever open at a time: the next one appears when the current one is marked paid, never on its own.
+_Avoid_: Recurring, subscription, standing bill
 
----
+**Estimated amount**:
+The amount on a newly appeared Repeating bill, copied from the last one and shown as "about $X" until the Person confirms or changes it.
+_Avoid_: Default amount, guess, placeholder
 
-## Tech Stack
+**How often**:
+The schedule of a Bill: Just once, Every month, Every 3 months or Every year.
+_Avoid_: Frequency, interval, recurrence
 
-- **Framework:** Next.js + TypeScript
-- **Styling:** Tailwind CSS + CSS custom properties (`var(--)`)
-- **Data storage:** localStorage (no database, no backend)
-- **Structure:** Uses `src/` folder (not `app/` directly — note for navigation)
+**Due today**:
+An unpaid Bill whose due date is today, by the Person's own local date. Never shown as Overdue.
+_Avoid_: Overdue (on the due day itself)
 
----
+**Due soon**:
+An unpaid Bill whose due date falls in the next 7 days after today. Shown to the Person as "Due in the next 7 days" or "Due by <date>".
+_Avoid_: Due this week (it suggests a calendar week, which is not what is counted)
 
-## Folder Structure
+**Overdue**:
+An unpaid Bill whose due date was yesterday or earlier, by the Person's own local date.
+_Avoid_: Late, missed, past due
 
-src/
-├── app/          — Pages (Home, History)
-├── components/   — UI components
-├── data/         — Sample bills data
-├── docs/         — Project docs
-└── types/        — TypeScript types (Bill type)
+**Paid**:
+A Bill the Person has marked as paid in the app, with the date they marked it (the paid date). It does not mean the app checked any payment happened.
+_Avoid_: Settled, cleared, done
 
----
+**Paid Bills**:
+The list of Bills already marked paid, each showing its paid date, most recent first. Financial-year lists and printing sit underneath, under "For tax time".
+_Avoid_: History
 
-## App Structure
+### App areas
 
-| Route | Section | Notes |
-|---|---|---|
-| `/` | My Bills | Main dashboard — bill list, summary, calendar |
-| `/history` | History | Paid bills history |
+**Settings**:
+The one place for set-up choices a Person rarely changes, such as text size, colour theme, dark mode and saving the app to the home screen. Usually handled by a Helper.
+_Avoid_: Preferences, options, config
 
----
-
-## Key Components
-
-| Component | Purpose |
-|---|---|
-| `BillIcon` | Category icon for each bill |
-| `AddBillForm` | Form to add a new bill |
-| `ReminderBanner` | Banner showing upcoming/overdue alerts |
-| `CalendarView` | Visual calendar of bill due dates |
-| `ThemeToggle` | Dark/light mode switch |
-
----
-
-## Key Features
-
-- Summary strip — 3 cards: Due this week / Overdue / Total owing
-- Calendar view — click a day to highlight bills due that day
-- Mark as Paid — toggles paid status, moves to history
-- Delete bill — confirms before deleting
-- Reminder banner — shows upcoming and overdue bills
-- Dark/light theme via ThemeToggle
-
----
-
-## Design Tokens (never hardcode colours)
-
-- `--bg-page` — page background
-- `--bg-card` — card backgrounds
-- `--text-primary` — main text
-- `--text-secondary` — secondary text
-- `--border-default` — borders
-- `--accent-text` — accent colour for paid/totals
-- `--accent-button-bg` — highlight ring colour
-
----
-
-## Language & Terminology
-
-- App name: Seniors Bill Tracker (UI shows "My Bills")
-- Bills have: name, amount, dueDate, category, paid status
-- Due soon = within 7 days
-- Overdue = past due date and unpaid
-- History = paid bills
-
----
-
-## Known Gaps
-
-- [ ] Monetisation strategy not yet decided
-- [ ] No backend — data lives in browser localStorage only
-- [ ] Mobile responsiveness — check on small screens
+**Handy tools**:
+The extras that live outside bill tracking: the Calculator and the Converter, grouped behind one button.
+_Avoid_: Toolkit, utilities, extras
