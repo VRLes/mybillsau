@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Bill } from "@/types/bill";
+import { billStatus, billsDueOn, toLocalDate, todayLocal } from "@/lib/bills";
 import {
   ChevronLeft,
   ChevronRight,
@@ -39,37 +40,20 @@ export function CalendarView({
     return cells;
   }, [currentMonth]);
 
+  const today = todayLocal();
+
   function billsOnDay(date: Date) {
-    return bills.filter((b) => {
-      const due = new Date(b.dueDate);
-      return (
-        due.getFullYear() === date.getFullYear() &&
-        due.getMonth() === date.getMonth() &&
-        due.getDate() === date.getDate()
-      );
-    });
+    return billsDueOn(bills, toLocalDate(date));
   }
 
   function isToday(date: Date) {
-    const today = new Date();
-    return (
-      date.getFullYear() === today.getFullYear() &&
-      date.getMonth() === today.getMonth() &&
-      date.getDate() === today.getDate()
-    );
+    return toLocalDate(date) === today;
   }
 
   function dayStatus(dayBills: Bill[]): "overdue" | "due" | "paid" {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const isOverdue = dayBills.some(
-      (b) => !b.paid && new Date(b.dueDate) < today,
-    );
-    const hasUnpaid = dayBills.some((b) => !b.paid);
-
-    if (isOverdue) return "overdue";
-    if (hasUnpaid) return "due";
+    const statuses = dayBills.map((b) => billStatus(b, today));
+    if (statuses.includes("overdue")) return "overdue";
+    if (statuses.some((s) => s !== "paid")) return "due";
     return "paid";
   }
 

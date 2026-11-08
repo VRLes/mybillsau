@@ -3,17 +3,15 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Bill } from "@/types/bill";
+import {
+  FULL_DATE,
+  financialYear,
+  formatLocalDate,
+  loadBills,
+  paidBillsBetween,
+  todayLocal,
+} from "@/lib/bills";
 import { BillIcon } from "@/components/BillIcon";
-
-function getFinancialYearRange(offsetFromCurrent: number) {
-  const now = new Date();
-  const currentFYStartYear =
-    now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
-  const fyStartYear = currentFYStartYear + offsetFromCurrent;
-  const start = new Date(fyStartYear, 6, 1);
-  const end = new Date(fyStartYear + 1, 5, 30);
-  return { start, end };
-}
 
 export default function HistoryPage() {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -24,33 +22,20 @@ export default function HistoryPage() {
   >("thisFY");
 
   useEffect(() => {
-    const saved = localStorage.getItem("bills");
-    if (saved) setBills(JSON.parse(saved));
+    setBills(loadBills(localStorage));
   }, []);
 
   function applyPreset(preset: "thisFY" | "lastFY") {
     const offset = preset === "thisFY" ? 0 : -1;
-    const { start, end } = getFinancialYearRange(offset);
-    setRangeStart(start.toISOString().split("T")[0]);
-    setRangeEnd(end.toISOString().split("T")[0]);
+    const { start, end } = financialYear(todayLocal(), offset);
+    setRangeStart(start);
+    setRangeEnd(end);
     setActivePreset(preset);
   }
 
   const paidBillsInRange = useMemo(() => {
     if (!rangeStart || !rangeEnd) return [];
-    const start = new Date(rangeStart);
-    const end = new Date(rangeEnd);
-    end.setHours(23, 59, 59, 999);
-
-    return bills
-      .filter((b) => b.paid)
-      .filter((b) => {
-        const due = new Date(b.dueDate);
-        return due >= start && due <= end;
-      })
-      .sort(
-        (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
-      );
+    return paidBillsBetween(bills, rangeStart, rangeEnd);
   }, [bills, rangeStart, rangeEnd]);
 
   const total = paidBillsInRange.reduce((sum, b) => sum + b.amount, 0);
@@ -153,17 +138,9 @@ export default function HistoryPage() {
           <div className="bg-[var(--bg-card)] rounded-2xl shadow-md p-5 mb-6 flex items-center justify-between">
             <div>
               <p className="text-[var(--text-secondary)] text-sm">
-                {new Date(rangeStart).toLocaleDateString("en-AU", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+                {formatLocalDate(rangeStart, FULL_DATE)}
                 {" – "}
-                {new Date(rangeEnd).toLocaleDateString("en-AU", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+                {formatLocalDate(rangeEnd, FULL_DATE)}
               </p>
               <p className="text-[var(--text-secondary)] text-sm mt-1">
                 {paidBillsInRange.length} bill
@@ -212,7 +189,7 @@ export default function HistoryPage() {
                       {bill.name}
                     </p>
                     <p className="text-[var(--text-secondary)]">
-                      Due: {new Date(bill.dueDate + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}
+                      Due: {formatLocalDate(bill.dueDate, FULL_DATE)}
                     </p>
                   </div>
                   <p className="text-2xl font-bold text-[var(--text-primary)]">

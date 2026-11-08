@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Bill } from "@/types/bill";
-
-
-      
+import {
+  FULL_DATE,
+  formatLocalDate,
+  loadBills,
+  saveBills,
+  summarise,
+  todayLocal,
+} from "@/lib/bills";
 import { BillIcon } from "@/components/BillIcon";
 import { AddBillForm } from "@/components/AddBillForm";
 import { ReminderBanner } from "@/components/ReminderBanner";
@@ -20,10 +25,7 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("bills");
-    if (saved) {
-      setBills(JSON.parse(saved));
-    }
+    setBills(loadBills(localStorage));
     // Mark as loaded, even when nothing was saved, so a new visitor starts with an empty list
     setLoaded(true);
   }, []);
@@ -31,29 +33,13 @@ export default function Home() {
   useEffect(() => {
       // Only save after the first read, otherwise an empty list would wipe saved bills
     if (loaded) {
-      localStorage.setItem("bills", JSON.stringify(bills));
+      saveBills(localStorage, bills);
     }
   }, [bills, loaded]);
 
-  const summary = useMemo(() => {
-    const today = new Date();
-    const in7days = new Date();
-    in7days.setDate(today.getDate() + 7);
-
-    const unpaid = bills.filter((b) => !b.paid);
-    const dueSoon = unpaid.filter((b) => {
-      const due = new Date(b.dueDate);
-      return due >= today && due <= in7days;
-    });
-    const overdue = unpaid.filter((b) => new Date(b.dueDate) < today);
-    const totalOwing = unpaid.reduce((sum, b) => sum + b.amount, 0);
-
-    return {
-      dueSoonCount: dueSoon.length,
-      overdueCount: overdue.length,
-      totalOwing,
-    };
-  }, [bills]);
+  // Worked out on every draw, never remembered, so it can't go stale overnight
+  // and always matches the banner
+  const summary = summarise(bills, todayLocal());
 
   function handleAdd(bill: Bill) {
     setBills((prev) => [...prev, bill]);
@@ -126,15 +112,15 @@ export default function Home() {
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-[var(--bg-card)] rounded-2xl shadow-md p-5 text-center">
           <p className="text-3xl font-bold text-amber-600">
-            {summary.dueSoonCount}
+            {summary.dueToday.length + summary.dueSoon.length}
           </p>
           <p className="text-[var(--text-secondary)] text-sm mt-1">
-            Due this week
+            Due today or in the next 7 days
           </p>
         </div>
         <div className="bg-[var(--bg-card)] rounded-2xl shadow-md p-5 text-center">
           <p className="text-3xl font-bold text-red-600">
-            {summary.overdueCount}
+            {summary.overdue.length}
           </p>
           <p className="text-[var(--text-secondary)] text-sm mt-1">Overdue</p>
         </div>
@@ -191,7 +177,7 @@ export default function Home() {
                 {bill.name}
               </p>
               <p className="text-[var(--text-secondary)]">
-                Due: {new Date(bill.dueDate + "T00:00:00").toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}
+                Due: {formatLocalDate(bill.dueDate, FULL_DATE)}
               </p>
             </div>
             <div className="text-right">

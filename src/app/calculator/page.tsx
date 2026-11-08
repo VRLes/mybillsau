@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Bill } from "@/types/bill";
+import { loadBills, unpaidBills } from "@/lib/bills";
 import Link from "next/link";
 
 type Operator = "+" | "−" | "×" | "÷";
@@ -70,16 +71,13 @@ export default function CalculatorPage() {
   const [tickedIds, setTickedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const saved = localStorage.getItem("bills");
-    if (saved) {
-      setBills(JSON.parse(saved));
-    }
+    setBills(loadBills(localStorage));
   }, []);
 
   // Only bills not yet paid are shown, as those are the ones to add up
-  const unpaidBills = bills.filter((b) => !b.paid);
+  const unpaid = unpaidBills(bills);
 
-  const tickedTotal = unpaidBills
+  const tickedTotal = unpaid
     .filter((b) => tickedIds.has(b.id))
     .reduce((sum, b) => sum + b.amount, 0);
 
@@ -275,13 +273,13 @@ export default function CalculatorPage() {
           Tick the bills you want to add up.
         </p>
 
-        {unpaidBills.length === 0 ? (
+        {unpaid.length === 0 ? (
           <p className="text-[var(--text-primary)] text-lg">
             You have no unpaid bills. You&apos;re all caught up!
           </p>
         ) : (
           <div className="space-y-3">
-            {unpaidBills.map((bill) => (
+            {unpaid.map((bill) => (
               <label
                 key={bill.id}
                 className="bg-[var(--bg-card)] rounded-2xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
