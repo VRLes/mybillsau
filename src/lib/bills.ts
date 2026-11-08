@@ -169,7 +169,7 @@ export const HOW_OFTEN_WORDS: Record<HowOften, string> = {
   yearly: "Every year",
 };
 
-/** What the Person fills in on the Add a bill page. */
+/** What the Person fills in on the Add a bill or Edit bill page. */
 export type NewBill = Pick<Bill, "name" | "amount" | "dueDate" | "category"> & {
   howOften?: HowOften;
 };
@@ -199,11 +199,60 @@ export function deleteBill(bills: Bill[], id: string): Bill[] {
   return bills.filter((b) => b.id !== id);
 }
 
-/** A copy of the Bill without one of its optional fields. */
-function without(bill: Bill, field: "paidDate" | "estimated"): Bill {
+/** A copy of the Bill without some of its optional fields. */
+function without(
+  bill: Bill,
+  ...fields: ("paidDate" | "estimated" | "howOften" | "seriesId" | "dueDay")[]
+): Bill {
   const copy = { ...bill };
-  delete copy[field];
+  for (const field of fields) delete copy[field];
   return copy;
+}
+
+/** A Bill's details as the Person sees them on the Add or Edit bill page. */
+export function billDetails(bill: Bill): NewBill {
+  const { name, amount, dueDate, category } = bill;
+  return { name, amount, dueDate, category, howOften: howOften(bill) };
+}
+
+/**
+ * A series id for a Bill starting to repeat: its own id, unless an old
+ * series already uses that (it was the first Bill of a series it left), so
+ * it can never rejoin a series that has an open Bill of its own (ADR 0001).
+ */
+function freshSeriesId(bills: Bill[], bill: Bill): string {
+  const taken = new Set(
+    bills.filter((b) => b.id !== bill.id).map((b) => b.seriesId),
+  );
+  let seriesId = bill.id;
+  for (let n = 2; taken.has(seriesId); n++) seriesId = `${bill.id}-${n}`;
+  return seriesId;
+}
+
+/**
+ * The Person or a Helper fixes a Bill's details. Saving always confirms an
+ * Estimated amount, changed or not. Turning a Just once Bill into a
+ * Repeating bill starts a series of its own; turning it back to Just once
+ * takes it out of its series. Every other Bill stays exactly as it was.
+ */
+export function editBill(bills: Bill[], id: string, details: NewBill): Bill[] {
+  const { howOften: newHowOften = "once", ...fields } = details;
+  return bills.map((b) => {
+    if (b.id !== id) return b;
+    const edited = {
+      ...without(b, "estimated", "howOften", "seriesId", "dueDay"),
+      ...fields,
+    };
+    if (newHowOften === "once") return edited;
+    // A moved due date sets a new day of the month; an unchanged one keeps
+    // the series day, so a clamped 28 Feb can still go back to the 31st
+    const dueDay =
+      b.dueDay !== undefined && fields.dueDate === b.dueDate
+        ? b.dueDay
+        : dateParts(fields.dueDate)[2];
+    const seriesId = b.seriesId ?? freshSeriesId(bills, b);
+    return { ...edited, howOften: newHowOften, seriesId, dueDay };
+  });
 }
 
 /** Every Bill in the same repeating series as `bill` (none for Just once). */

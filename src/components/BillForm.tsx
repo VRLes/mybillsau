@@ -18,19 +18,32 @@ const categories: { value: BillCategory; label: string }[] = [
 
 const schedules: HowOften[] = ["once", "monthly", "quarterly", "yearly"];
 
-/** The Add a bill fields. Saving is left to the page, through the bills module. */
-export function AddBillForm({ onSave }: { onSave: (details: NewBill) => void }) {
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [category, setCategory] = useState<BillCategory>("other");
-  const [howOften, setHowOften] = useState<HowOften>("once");
+/**
+ * The Add a bill fields, also used to edit a Bill (start from `initial`).
+ * Saving is left to the page, through the bills module.
+ */
+export function BillForm({
+  onSave,
+  initial,
+  saveLabel = "Save bill",
+}: {
+  onSave: (details: NewBill) => void;
+  initial?: NewBill;
+  saveLabel?: string;
+}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [amount, setAmount] = useState(initial ? initial.amount.toFixed(2) : "");
+  const [dueDate, setDueDate] = useState(initial?.dueDate ?? "");
+  const [category, setCategory] = useState<BillCategory>(initial?.category ?? "other");
+  const [howOften, setHowOften] = useState<HowOften>(initial?.howOften ?? "once");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!name || !amount || !dueDate) return;
+    const typed = parseFloat(amount);
+    // Same rule as "Change if different": a real amount, never below $0
+    if (!name || !dueDate || !Number.isFinite(typed) || typed < 0) return;
 
-    onSave({ name, amount: parseFloat(amount), dueDate, category, howOften });
+    onSave({ name, amount: typed, dueDate, category, howOften });
   }
 
   return (
@@ -58,6 +71,8 @@ export function AddBillForm({ onSave }: { onSave: (details: NewBill) => void }) 
         <input
           type="number"
           step="0.01"
+          min="0"
+          inputMode="decimal"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="e.g. 120.50"
@@ -132,7 +147,7 @@ export function AddBillForm({ onSave }: { onSave: (details: NewBill) => void }) 
         type="submit"
         className="w-full bg-[var(--accent-button-bg)] text-white text-xl font-semibold rounded-xl py-4 shadow-md hover:bg-[var(--accent-button-hover)] hover:shadow-lg transition-all"
       >
-        Save bill
+        {saveLabel}
       </button>
 
       <Link

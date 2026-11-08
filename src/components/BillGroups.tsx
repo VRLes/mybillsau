@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import Link from "next/link";
 import { Bill } from "@/types/bill";
 import {
   DAY_DATE,
@@ -133,6 +134,14 @@ function BillCard({
         >
           {bill.paid ? "Paid" : "Mark as Paid"}
         </button>
+        {!bill.paid && (
+          <Link
+            href={`/edit?id=${encodeURIComponent(bill.id)}`}
+            className="block mt-2 ml-auto text-[var(--accent-text)] font-semibold underline"
+          >
+            Edit
+          </Link>
+        )}
         <button
           onClick={() => onDelete(bill.id)}
           className="block mt-2 ml-auto text-sm text-red-500 hover:text-red-700"

@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import type { Bill } from "../types/bill";
 import {
   addBill,
+  billDetails,
   billStatus,
   billsDueOn,
   confirmAmount,
   deleteBill,
+  editBill,
   dueSoonUntil,
   dueWords,
   financialYear,
@@ -689,5 +691,116 @@ describe("Repeating bills: the Estimated amount", () => {
   it("leaves every other Bill alone", () => {
     const other = bill({ id: "x", estimated: true });
     expect(confirmAmount([next, other], "r2", 1)[1]).toBe(other);
+  });
+});
+
+describe("Editing a Bill", () => {
+  const details = {
+    name: "Power",
+    amount: 120,
+    dueDate: "2026-11-20",
+    category: "electricity" as const,
+    howOften: "once" as const,
+  };
+
+  it("changes name, amount, due date and category of that Bill only", () => {
+    const others = [bill({ id: "a" }), bill({ id: "c", name: "Rent" })];
+    const bills = [others[0], bill({ id: "b" }), others[1]];
+    const edited = editBill(bills, "b", { ...details, category: "water" });
+    expect(edited).toEqual([
+      others[0],
+      { id: "b", name: "Power", amount: 120, dueDate: "2026-11-20", paid: false, category: "water" },
+      others[1],
+    ]);
+    // Untouched Bills are the very same objects
+    expect(edited[0]).toBe(others[0]);
+    expect(edited[2]).toBe(others[1]);
+  });
+
+  it("leaves the list it was given alone", () => {
+    const existing = [bill({ id: "a" })];
+    editBill(existing, "a", details);
+    expect(existing).toEqual([bill({ id: "a" })]);
+  });
+
+  it("changes nothing when no Bill has that id", () => {
+    const bills = [bill({ id: "a" })];
+    expect(editBill(bills, "missing", details)).toEqual(bills);
+  });
+
+  it("saving an Estimated amount, changed or not, confirms it", () => {
+    const next = bill({ id: "r2", amount: 400, howOften: "monthly", seriesId: "r1", dueDay: 8, estimated: true });
+    const same = billDetails(next);
+    const [kept] = editBill([next], "r2", same);
+    expect(kept).not.toHaveProperty("estimated");
+    expect(kept.amount).toBe(400);
+    const [changed] = editBill([next], "r2", { ...same, amount: 415 });
+    expect(changed).not.toHaveProperty("estimated");
+    expect(changed.amount).toBe(415);
+  });
+
+  it("Just once to repeating starts a series of its own", () => {
+    const [edited] = editBill([bill({ id: "a" })], "a", { ...details, howOften: "monthly" });
+    expect(edited).toMatchObject({ howOften: "monthly", seriesId: "a", dueDay: 20 });
+    // Marking it paid now brings in the next one
+    const { bills } = markPaid([edited], "a", "2026-11-20");
+    expect(bills.map((b) => b.dueDate)).toEqual(["2026-11-20", "2026-12-20"]);
+  });
+
+  it("repeating to Just once leaves the series, so no next Bill appears", () => {
+    const paidEarlier = bill({ id: "r1", paid: true, paidDate: "2026-10-08", dueDate: "2026-10-08", howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    const open = bill({ id: "r2", howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    const edited = editBill([paidEarlier, open], "r2", { ...details, howOften: "once" });
+    expect(edited[1]).toEqual({ id: "r2", name: "Power", amount: 120, dueDate: "2026-11-20", paid: false, category: "electricity" });
+    expect(edited[0]).toBe(paidEarlier);
+    expect(markPaid(edited, "r2", "2026-11-20").bills).toHaveLength(2);
+    // Un-paying the old one no longer removes the Bill that left the series
+    expect(markUnpaid(edited, "r1").map((b) => b.id)).toEqual(["r1", "r2"]);
+  });
+
+  it("a first Bill that left its series and comes back starts a new one, so the old series keeps one open Bill", () => {
+    const monthly = { howOften: "monthly" as const, seriesId: "r1", dueDay: 8 };
+    let bills = [
+      bill({ id: "r1", dueDate: "2026-09-08", ...monthly }),
+      bill({ id: "n1", dueDate: "2026-10-08", paid: true, paidDate: "2026-10-08", ...monthly }),
+    ];
+    const r1 = { name: "Electricity", amount: 100, dueDate: "2026-09-08", category: "electricity" as const };
+    bills = editBill(bills, "r1", { ...r1, howOften: "once" });
+    bills = markUnpaid(bills, "n1");
+    bills = editBill(bills, "r1", { ...r1, howOften: "monthly" });
+    const back = bills.find((b) => b.id === "r1")!;
+    expect(back.seriesId).not.toBe("r1");
+    // Every series still has at most one open Bill
+    const openBySeries = new Map<string, number>();
+    for (const b of bills.filter((b) => !b.paid && b.seriesId)) {
+      openBySeries.set(b.seriesId!, (openBySeries.get(b.seriesId!) ?? 0) + 1);
+    }
+    expect(Math.max(...openBySeries.values())).toBe(1);
+  });
+
+  it("the Bill's details, ready to edit, round-trip without changing it", () => {
+    const open = bill({ id: "r2", amount: 400, howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    expect(billDetails(open)).toEqual({ name: "Electricity", amount: 400, dueDate: "2026-11-08", category: "electricity", howOften: "monthly" });
+    expect(billDetails(bill())).toMatchObject({ howOften: "once" });
+    expect(editBill([open], "r2", billDetails(open))).toEqual([open]);
+  });
+
+  it("changing between repeating choices keeps the series", () => {
+    const open = bill({ id: "r2", howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    const [edited] = editBill([open], "r2", { ...details, dueDate: open.dueDate, howOften: "yearly" });
+    expect(edited).toMatchObject({ howOften: "yearly", seriesId: "r1", dueDay: 8 });
+  });
+
+  it("a new due date on a Repeating bill moves the series to that day of the month", () => {
+    const open = bill({ id: "r2", howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    const [edited] = editBill([open], "r2", { ...details, howOften: "monthly" });
+    expect(edited.dueDay).toBe(20);
+  });
+
+  it("keeping the due date keeps the series day, even in a short month", () => {
+    // Due on the 31st, clamped to 28 Feb: it should still go back to the 31st
+    const open = bill({ id: "r2", dueDate: "2027-02-28", howOften: "monthly", seriesId: "r1", dueDay: 31 });
+    const [edited] = editBill([open], "r2", { ...details, dueDate: "2027-02-28", howOften: "monthly" });
+    expect(edited.dueDay).toBe(31);
   });
 });

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { addBill, loadBills, saveBills, type NewBill } from "@/lib/bills";
-import { AddBillForm } from "@/components/AddBillForm";
+import { BillForm } from "@/components/BillForm";
 
 /** Add a bill: its own calm page, so the main screen stays uncluttered. */
 export default function AddBillPage() {
@@ -13,7 +13,7 @@ export default function AddBillPage() {
     // Read fresh from storage, so nothing saved elsewhere is lost
     saveBills(localStorage, addBill(loadBills(localStorage), details, id));
     // Back to My Bills, which lights up the new Bill in its group
-    router.push(`/?added=${encodeURIComponent(id)}`);
+    router.push(`/?highlight=${encodeURIComponent(id)}`);
   }
 
   return (
@@ -22,7 +22,7 @@ export default function AddBillPage() {
         Add a bill
       </h1>
 
-      <AddBillForm onSave={handleSave} />
+      <BillForm onSave={handleSave} />
     </main>
   );
 }
