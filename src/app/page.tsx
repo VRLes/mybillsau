@@ -162,7 +162,7 @@ export default function Home() {
           href="/history"
           className="inline-block bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-all"
         >
-          View paid bills history
+          Paid Bills
         </Link>
         <Link
           href="/calculator"

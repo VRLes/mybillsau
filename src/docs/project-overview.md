@@ -35,7 +35,7 @@ A simple, visual bill and subscription tracker designed for seniors. No login re
 ## Folder Structure
 
 src/
-├── app/          — Pages (Home, History)
+├── app/          — Pages (Home, Paid Bills)
 ├── components/   — UI components
 ├── data/         — Sample bills data
 ├── docs/         — Project docs
@@ -48,7 +48,7 @@ src/
 | Route | Section | Notes |
 |---|---|---|
 | `/` | My Bills | Main dashboard — bill list, summary, calendar |
-| `/history` | History | Paid bills history |
+| `/history` | Paid Bills | Recently paid first (paid date, most recent first); financial-year lists and printing under "For tax time" |
 
 ---
 
@@ -71,7 +71,7 @@ src/
 - Bill groups — Overdue (calm amber), Due today, Due in the next 7 days, Later, Paid
 - Calendar hidden behind "Show calendar"
 - Calendar view — click a day to highlight bills due that day
-- Mark as Paid — toggles paid status, moves to history
+- Mark as Paid — saves the paid date, with Undo; the Bill moves to Paid Bills
 - Delete bill — confirms before deleting
 - Dark/light theme via ThemeToggle
 

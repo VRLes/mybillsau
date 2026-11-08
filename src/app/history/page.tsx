@@ -9,6 +9,8 @@ import {
   formatLocalDate,
   loadBills,
   paidBillsBetween,
+  paidWords,
+  recentlyPaid,
   todayLocal,
 } from "@/lib/bills";
 import { BillIcon } from "@/components/BillIcon";
@@ -38,6 +40,8 @@ export default function HistoryPage() {
     return paidBillsBetween(bills, rangeStart, rangeEnd);
   }, [bills, rangeStart, rangeEnd]);
 
+  const recent = useMemo(() => recentlyPaid(bills), [bills]);
+
   const total = paidBillsInRange.reduce((sum, b) => sum + b.amount, 0);
 
   return (
@@ -50,7 +54,7 @@ export default function HistoryPage() {
       </Link>
 
       <h1 className="text-4xl font-bold mb-6 text-[var(--text-primary)]">
-        Paid Bills History
+        Paid Bills
       </h1>
 
       <div className="print:hidden mb-6">
@@ -61,6 +65,46 @@ export default function HistoryPage() {
           How does this work?
         </Link>
       </div>
+
+      <section aria-labelledby="recent-heading" className="print:hidden mb-10">
+        <h2
+          id="recent-heading"
+          className="text-2xl font-semibold mb-4 text-[var(--text-primary)]"
+        >
+          Recently paid
+        </h2>
+        {recent.length === 0 ? (
+          <p className="text-[var(--text-secondary)] text-lg py-4">
+            No bills marked as paid yet.
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {recent.map((bill) => (
+              <li
+                key={bill.id}
+                className="bg-[var(--bg-card)] rounded-2xl shadow-md p-6 flex items-center gap-4"
+              >
+                <BillIcon category={bill.category} />
+                <div className="flex-1">
+                  <p className="text-xl font-semibold text-[var(--text-primary)]">
+                    {bill.name}
+                  </p>
+                  <p className="text-lg text-[var(--text-secondary)]">
+                    {paidWords(bill)}
+                  </p>
+                </div>
+                <p className="text-2xl font-bold text-[var(--text-primary)]">
+                  ${bill.amount.toFixed(2)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <h2 className="text-2xl font-semibold mb-4 text-[var(--text-primary)]">
+        For tax time
+      </h2>
 
       <div className="print:hidden bg-[var(--bg-card)] rounded-2xl shadow-md p-6 mb-6 space-y-4">
         <p className="text-lg font-medium text-[var(--text-primary)]">
@@ -189,7 +233,9 @@ export default function HistoryPage() {
                       {bill.name}
                     </p>
                     <p className="text-[var(--text-secondary)]">
-                      Due: {formatLocalDate(bill.dueDate, FULL_DATE)}
+                      {bill.paidDate
+                        ? `Paid ${formatLocalDate(bill.paidDate, FULL_DATE)}`
+                        : `Due ${formatLocalDate(bill.dueDate, FULL_DATE)} (paid date not recorded)`}
                     </p>
                   </div>
                   <p className="text-2xl font-bold text-[var(--text-primary)]">

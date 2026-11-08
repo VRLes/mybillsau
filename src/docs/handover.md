@@ -173,7 +173,7 @@
 - Primary audience: seniors, especially those with memory difficulties — not a general "subscription creep" app
 - Freemium monetisation planned (not yet built): free tier ~10 bills, paid tier (~$3-5/mo) for unlimited bills, carer/family sharing, spending insights, export
 - No settings/help page planned — the interface itself should be self-explanatory rather than relying on documentation nobody will read
-- History groups bills by due date, not actual payment date (no separate "date paid" field currently tracked) — worth reconsidering if precise payment-date tracking is wanted later
+- Paid Bills (`/history`) now opens on Recently paid, ordered by paid date (#9). For tax time, financial-year lists match on paid date, falling back to due date for older Bills with no paid date recorded
 
 ### What didn't work / had to be fixed
 
