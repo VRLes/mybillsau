@@ -44,8 +44,8 @@ export default function Home() {
   const [loaded, setLoaded] = useState(false);
   // The calendar stays out of the way until the Person asks for it
   const [showCalendar, setShowCalendar] = useState(false);
-  // The Bill just saved on the Add a bill page, waiting to be scrolled to once drawn
-  const justAdded = useRef<string>(undefined);
+  // The Bill just saved on the Add or Edit bill page, waiting to be scrolled to once drawn
+  const justSaved = useRef<string>(undefined);
   // What Undo needs while "Marked as paid — Undo" is showing
   const [undo, setUndo] = useState<MarkPaidUndo | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -59,11 +59,11 @@ export default function Home() {
     setBills(loadBills(localStorage));
     // Mark as loaded, even when nothing was saved, so a new visitor starts with an empty list
     setLoaded(true);
-    // Coming back from Add a bill: show the Person where their new Bill went
-    const added = new URLSearchParams(window.location.search).get("added");
-    if (added) {
-      setHighlightedIds(new Set([added]));
-      justAdded.current = added;
+    // Coming back from Add or Edit bill: show the Person where that Bill went
+    const highlight = new URLSearchParams(window.location.search).get("highlight");
+    if (highlight) {
+      setHighlightedIds(new Set([highlight]));
+      justSaved.current = highlight;
       // Tidy the address so a refresh doesn't highlight it again
       window.history.replaceState(null, "", "/");
     }
@@ -71,9 +71,9 @@ export default function Home() {
 
   useEffect(() => {
     // Runs once the loaded Bills are on screen
-    if (!loaded || !justAdded.current) return;
-    scrollToBill(justAdded.current);
-    justAdded.current = undefined;
+    if (!loaded || !justSaved.current) return;
+    scrollToBill(justSaved.current);
+    justSaved.current = undefined;
     const timer = setTimeout(() => setHighlightedIds(new Set()), 2500);
     return () => clearTimeout(timer);
   }, [loaded]);
