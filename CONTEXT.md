@@ -28,6 +28,10 @@ _Avoid_: Payment, invoice, subscription (subscription is a category, not a diffe
 A Bill that comes back on a regular schedule (every month, every 3 months or every year). Only one is ever open at a time: the next one appears when the current one is marked paid, never on its own.
 _Avoid_: Recurring, subscription, standing bill
 
+**Series**:
+All the Bills one Repeating bill has brought in over time, the first one included. At most one Bill in a series is open (unpaid) at once.
+_Avoid_: Chain, sequence, schedule
+
 **Estimated amount**:
 The amount on a newly appeared Repeating bill, copied from the last one and shown as "about $X" until the Person confirms or changes it.
 _Avoid_: Default amount, guess, placeholder

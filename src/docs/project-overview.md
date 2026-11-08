@@ -73,6 +73,7 @@ src/
 - Calendar hidden behind "Show calendar"
 - Calendar view — click a day to highlight bills due that day
 - Mark as Paid — saves the paid date, with Undo; the Bill moves to Paid Bills
+- Repeating bills — How often (Just once, Every month, Every 3 months, Every year) on Add a bill. Marking one paid brings in the next Bill one period later (month-end clamped, e.g. 31 Jan to 28/29 Feb, back to the 31st when the month allows) with an Estimated amount shown as "about $X — Change if different". Undo removes it again. Only one open Bill per series (ADR 0001). Bills saved before this are Just once
 - Delete bill — confirms before deleting
 - Dark/light theme via ThemeToggle
 

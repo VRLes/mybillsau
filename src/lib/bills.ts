@@ -1,4 +1,4 @@
-import type { Bill } from "../types/bill";
+import type { Bill, HowOften } from "../types/bill";
 
 /**
  * A calendar date in the Person's own time zone, written "YYYY-MM-DD".
@@ -50,6 +50,32 @@ function addDays(date: LocalDate, days: number): LocalDate {
   const [y, m, d] = dateParts(date);
   const shifted = new Date(Date.UTC(y, m - 1, d + days));
   return shifted.toISOString().slice(0, 10);
+}
+
+/** How many months one period of a Repeating bill lasts. */
+const MONTHS_PER_PERIOD: Record<Exclude<HowOften, "once">, number> = {
+  monthly: 1,
+  quarterly: 3,
+  yearly: 12,
+};
+
+/**
+ * The due date one period after `date`, for the next Bill in a series.
+ * `dueDay` is the day of the month the series is due on (the first Bill's
+ * day). A month too short for it uses its last day instead (31 Jan to 28 or
+ * 29 Feb), and the series goes back to `dueDay` once the months allow.
+ */
+export function nextDueDate(
+  date: LocalDate,
+  howOften: Exclude<HowOften, "once">,
+  dueDay: number = dateParts(date)[2],
+): LocalDate {
+  const [y, m] = dateParts(date);
+  // Month numbers past 12 roll into the next year; day 0 is the month before's last day
+  const monthIndex = m - 1 + MONTHS_PER_PERIOD[howOften];
+  const lastDay = new Date(Date.UTC(y, monthIndex + 1, 0)).getUTCDate();
+  const next = new Date(Date.UTC(y, monthIndex, Math.min(dueDay, lastDay)));
+  return next.toISOString().slice(0, 10);
 }
 
 /** How many days after today still count as Due soon. */
@@ -130,12 +156,42 @@ export function unpaidBills(bills: Bill[]): Bill[] {
   return bills.filter((b) => !b.paid);
 }
 
-/** What the Person fills in on the Add a bill page. */
-export type NewBill = Pick<Bill, "name" | "amount" | "dueDate" | "category">;
+/** A Bill's How often. Bills saved before How often existed are Just once. */
+export function howOften(bill: Bill): HowOften {
+  return bill.howOften ?? "once";
+}
 
-/** Adds a new, unpaid Bill to the end of the list. */
+/** How often, in the words the Person sees. */
+export const HOW_OFTEN_WORDS: Record<HowOften, string> = {
+  once: "Just once",
+  monthly: "Every month",
+  quarterly: "Every 3 months",
+  yearly: "Every year",
+};
+
+/** What the Person fills in on the Add a bill page. */
+export type NewBill = Pick<Bill, "name" | "amount" | "dueDate" | "category"> & {
+  howOften?: HowOften;
+};
+
+/**
+ * Adds a new, unpaid Bill to the end of the list. A Repeating bill starts a
+ * series of its own; a Just once Bill is saved exactly as Bills always were.
+ */
 export function addBill(bills: Bill[], details: NewBill, id: string): Bill[] {
-  return [...bills, { id, ...details, paid: false }];
+  const { howOften = "once", ...rest } = details;
+  const bill: Bill =
+    howOften === "once"
+      ? { id, ...rest, paid: false }
+      : {
+          id,
+          ...rest,
+          paid: false,
+          howOften,
+          seriesId: id,
+          dueDay: dateParts(rest.dueDate)[2],
+        };
+  return [...bills, bill];
 }
 
 /** Removes one Bill for good. Every other Bill stays as it was, in order. */
@@ -143,42 +199,129 @@ export function deleteBill(bills: Bill[], id: string): Bill[] {
   return bills.filter((b) => b.id !== id);
 }
 
+/** A copy of the Bill without one of its optional fields. */
+function without(bill: Bill, field: "paidDate" | "estimated"): Bill {
+  const copy = { ...bill };
+  delete copy[field];
+  return copy;
+}
+
+/** Every Bill in the same repeating series as `bill` (none for Just once). */
+function seriesOf(bills: Bill[], bill: Bill): Bill[] {
+  return bill.seriesId === undefined
+    ? []
+    : bills.filter((b) => b.seriesId === bill.seriesId);
+}
+
 /**
- * What Undo needs to put a Mark as Paid back: the Bill as it was just before.
- * Repeating bills (#10) will add the next Bill that appeared, so Undo can remove it.
+ * What Undo needs to put a Mark as Paid back: the Bill as it was just before,
+ * and the next Bill that appeared if it was a Repeating bill.
  */
 export interface MarkPaidUndo {
   before: Bill;
+  nextId?: string;
 }
 
-/** Marks one Bill paid, with today as its paid date. */
+/**
+ * The Bill that follows a Repeating bill: one period after the latest Bill in
+ * its series (so no period is ever added twice), with the amount just paid
+ * copied as an Estimated amount. Undefined for a Just once Bill.
+ */
+function nextBillAfter(bills: Bill[], bill: Bill): Bill | undefined {
+  const schedule = howOften(bill);
+  if (schedule === "once" || bill.seriesId === undefined) return undefined;
+  const latest = seriesOf(bills, bill).reduce((a, b) =>
+    b.dueDate > a.dueDate ? b : a,
+  );
+  const dueDate = nextDueDate(latest.dueDate, schedule, bill.dueDay);
+  return {
+    // Unique: no other Bill in the series is due this late
+    id: `${bill.seriesId}-${dueDate}`,
+    name: bill.name,
+    amount: bill.amount,
+    dueDate,
+    paid: false,
+    category: bill.category,
+    howOften: schedule,
+    seriesId: bill.seriesId,
+    dueDay: bill.dueDay,
+    estimated: true,
+  };
+}
+
+/**
+ * Marks one Bill paid, with today as its paid date. A Repeating bill brings
+ * in its next Bill, unless one in the series is already open (ADR 0001).
+ */
 export function markPaid(
   bills: Bill[],
   id: string,
   today: LocalDate,
 ): { bills: Bill[]; undo: MarkPaidUndo | undefined } {
   const before = bills.find((b) => b.id === id);
-  return {
-    bills: bills.map((b) =>
-      b.id === id ? { ...b, paid: true, paidDate: today } : b,
-    ),
-    undo: before && { before },
-  };
+  if (!before) return { bills, undo: undefined };
+  const marked = bills.map((b) =>
+    b.id === id ? { ...b, paid: true, paidDate: today } : b,
+  );
+  const seriesStillOpen = seriesOf(bills, before).some(
+    (b) => b.id !== id && !b.paid,
+  );
+  const next = seriesStillOpen ? undefined : nextBillAfter(bills, before);
+  if (!next) return { bills: marked, undo: { before } };
+  return { bills: [...marked, next], undo: { before, nextId: next.id } };
 }
 
-/** Undoes a Mark as Paid, putting that Bill back exactly as it was. */
+/**
+ * The next Bill a Mark as Paid brought in, so the Person can be told when
+ * it is due ("Next one due …").
+ */
+export function nextBillFrom(
+  bills: Bill[],
+  undo: MarkPaidUndo,
+): Bill | undefined {
+  return undo.nextId ? bills.find((b) => b.id === undo.nextId) : undefined;
+}
+
+/**
+ * Undoes a Mark as Paid, putting that Bill back exactly as it was and
+ * removing the next Bill it brought in.
+ */
 export function undoMarkPaid(bills: Bill[], undo: MarkPaidUndo): Bill[] {
-  return bills.map((b) => (b.id === undo.before.id ? undo.before : b));
+  return bills
+    .filter((b) => b.id !== undo.nextId)
+    .map((b) => (b.id === undo.before.id ? undo.before : b));
 }
 
-/** Marks a paid Bill unpaid again, forgetting its paid date. */
+/**
+ * Marks a paid Bill unpaid again, forgetting its paid date. For a Repeating
+ * bill, any other open Bill in its series goes, so only one is ever open.
+ */
 export function markUnpaid(bills: Bill[], id: string): Bill[] {
-  return bills.map((b) => {
-    if (b.id !== id) return b;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { paidDate, ...rest } = b;
-    return { ...rest, paid: false };
-  });
+  const bill = bills.find((b) => b.id === id);
+  if (!bill) return bills;
+  const otherOpen = new Set(
+    seriesOf(bills, bill)
+      .filter((b) => b.id !== id && !b.paid)
+      .map((b) => b.id),
+  );
+  return bills
+    .filter((b) => !otherOpen.has(b.id))
+    .map((b) => (b.id === id ? { ...without(b, "paidDate"), paid: false } : b));
+}
+
+/** True while an unpaid Bill's amount is an Estimated amount ("about $X"). */
+export function isEstimated(bill: Bill): boolean {
+  return bill.estimated === true && !bill.paid;
+}
+
+/**
+ * The Person confirms an Estimated amount, as it was or changed. Either way
+ * it stops being "about $X".
+ */
+export function confirmAmount(bills: Bill[], id: string, amount: number): Bill[] {
+  return bills.map((b) =>
+    b.id === id ? { ...without(b, "estimated"), amount } : b,
+  );
 }
 
 /** The browser-storage key Bills have always been saved under. */
