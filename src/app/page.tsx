@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { Bill } from "@/types/bill";
 import {
   confirmAmount,
@@ -24,6 +24,7 @@ import { Settings } from "@/components/Settings";
 import { UndoMessage } from "@/components/UndoMessage";
 import { DeleteQuestion } from "@/components/DeleteQuestion";
 import Link from "next/link";
+import { savedStorage, useSaved, useSavedReady } from "@/lib/savedValue";
 
 /** Brings one Bill into the middle of the screen. */
 function scrollToBill(id: string) {
@@ -32,18 +33,53 @@ function scrollToBill(id: string) {
     ?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+/** Before saved Bills are read: the server, and the first draw in the browser. */
+const NO_BILLS: Bill[] = [];
+
+/** Saves a change to the Bills, read fresh so nothing saved elsewhere is lost. */
+function changeBills(change: (bills: Bill[]) => Bill[]) {
+  saveBills(savedStorage, change(loadBills(savedStorage)));
+}
+
+/**
+ * The Bill just saved on the Add or Edit bill page, from "?highlight=" in the
+ * address, so the Person can see where it went. Read from the address itself
+ * (not useSearchParams, which would stop the server drawing this page), and
+ * checked again by React once Next has put the new address in place.
+ */
+const addressListeners = new Set<() => void>();
+function subscribeToAddress(listener: () => void) {
+  addressListeners.add(listener);
+  return () => {
+    addressListeners.delete(listener);
+  };
+}
+function billJustSaved(): string | null {
+  return new URLSearchParams(window.location.search).get("highlight");
+}
+/** Takes "?highlight=" off the address, so a refresh doesn't light it up again. */
+function tidyAddress() {
+  window.history.replaceState(null, "", "/");
+  addressListeners.forEach((listener) => listener());
+}
+
 /** How long "Marked as paid — Undo" stays up. Generous, so nobody has to rush. */
 const UNDO_SECONDS = 8;
 
 export default function Home() {
-  const [bills, setBills] = useState<Bill[]>([]);
+  const bills = useSaved(loadBills, NO_BILLS);
+  // Becomes true once saved bills have been read, so "No bills yet" never shows by mistake
+  const loaded = useSavedReady();
+  // Bills lit up from the calendar
   const [highlightedIds, setHighlightedIds] = useState<Set<string>>(new Set());
-  // Becomes true once saved bills have been read, so we never save over them by mistake
-  const [loaded, setLoaded] = useState(false);
+  // Coming back from Add or Edit bill: that Bill is lit up too
+  const justSaved = useSyncExternalStore(subscribeToAddress, billJustSaved, () => null);
+  const litIds = useMemo(
+    () => (justSaved ? new Set([...highlightedIds, justSaved]) : highlightedIds),
+    [highlightedIds, justSaved],
+  );
   // The calendar stays out of the way until the Person asks for it
   const [showCalendar, setShowCalendar] = useState(false);
-  // The Bill just saved on the Add or Edit bill page, waiting to be scrolled to once drawn
-  const justSaved = useRef<string>(undefined);
   // What Undo needs while "Marked as paid — Undo" is showing
   const [undo, setUndo] = useState<MarkPaidUndo | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -54,34 +90,12 @@ export default function Home() {
   useEffect(() => () => clearTimeout(undoTimer.current), []);
 
   useEffect(() => {
-    setBills(loadBills(localStorage));
-    // Mark as loaded, even when nothing was saved, so a new visitor starts with an empty list
-    setLoaded(true);
-    // Coming back from Add or Edit bill: show the Person where that Bill went
-    const highlight = new URLSearchParams(window.location.search).get("highlight");
-    if (highlight) {
-      setHighlightedIds(new Set([highlight]));
-      justSaved.current = highlight;
-      // Tidy the address so a refresh doesn't highlight it again
-      window.history.replaceState(null, "", "/");
-    }
-  }, []);
-
-  useEffect(() => {
-    // Runs once the loaded Bills are on screen
-    if (!loaded || !justSaved.current) return;
-    scrollToBill(justSaved.current);
-    justSaved.current = undefined;
-    const timer = setTimeout(() => setHighlightedIds(new Set()), 2500);
+    // Runs once the loaded Bills are on screen: show the Person where that Bill went
+    if (!loaded || !justSaved) return;
+    scrollToBill(justSaved);
+    const timer = setTimeout(tidyAddress, 2500);
     return () => clearTimeout(timer);
-  }, [loaded]);
-
-  useEffect(() => {
-      // Only save after the first read, otherwise an empty list would wipe saved bills
-    if (loaded) {
-      saveBills(localStorage, bills);
-    }
-  }, [bills, loaded]);
+  }, [loaded, justSaved]);
 
   // Worked out on every draw, never remembered, so it can't go stale overnight
   const today = todayLocal();
@@ -93,12 +107,12 @@ export default function Home() {
     const bill = bills.find((b) => b.id === id);
     if (!bill) return;
     if (bill.paid) {
-      setBills(markUnpaid(bills, id));
+      changeBills((now) => markUnpaid(now, id));
       return;
     }
     // One tap: paid straight away, with today's date, and a chance to undo
     const result = markPaid(bills, id, todayLocal());
-    setBills(result.bills);
+    saveBills(savedStorage, result.bills);
     if (!result.undo) return;
     setUndo(result.undo);
     clearTimeout(undoTimer.current);
@@ -106,13 +120,13 @@ export default function Home() {
   }
 
   function handleUndo() {
-    if (undo) setBills((prev) => undoMarkPaid(prev, undo));
+    if (undo) changeBills((now) => undoMarkPaid(now, undo));
     clearTimeout(undoTimer.current);
     setUndo(null);
   }
 
   function handleConfirmAmount(id: string, amount: number) {
-    setBills((prev) => confirmAmount(prev, id, amount));
+    changeBills((now) => confirmAmount(now, id, amount));
   }
 
   function askToDelete(id: string) {
@@ -121,7 +135,7 @@ export default function Home() {
 
   function handleDeleteYes() {
     const bill = askingToDelete;
-    if (bill) setBills((prev) => deleteBill(prev, bill.id));
+    if (bill) changeBills((now) => deleteBill(now, bill.id));
     setAskingToDelete(null);
   }
 
@@ -163,7 +177,7 @@ export default function Home() {
         summary={summary}
         paid={bills.filter((b) => b.paid)}
         today={today}
-        highlightedIds={highlightedIds}
+        highlightedIds={litIds}
         onTogglePaid={togglePaid}
         onDelete={askToDelete}
         onConfirmAmount={handleConfirmAmount}

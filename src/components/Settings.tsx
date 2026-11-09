@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import Link from "next/link";
 import {
   TEXT_SIZES,
@@ -19,6 +19,7 @@ import {
   saveDarkMode,
   type ColorTheme,
 } from "@/lib/theme";
+import { savedStorage, useSaved, type SavedStorage } from "@/lib/savedValue";
 
 const BUTTON =
   "text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-shadow border-2";
@@ -37,37 +38,33 @@ const SAMPLES: Record<ColorTheme, [string, string, string]> = {
   "high-contrast": ["#ffffff", "#ffffff", "#000000"],
 };
 
+/** Dark mode as saved, or as the device is set if the Person never chose. */
+function loadDark(storage: SavedStorage): boolean {
+  return loadDarkMode(storage, deviceIsDark());
+}
+
 /**
  * The one place for set-up choices a Person rarely changes, kept at the
  * bottom of My Bills so it never gets in the way of their bills. Every choice
  * shows all its options at once, with the current one filled in and ticked.
  */
 export function Settings() {
-  const [textSize, setTextSize] = useState<TextSize>("large");
-  const [theme, setTheme] = useState<ColorTheme>("warm-cream");
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    setTextSize(loadTextSize(localStorage));
-    setTheme(loadColorTheme(localStorage));
-    setDark(loadDarkMode(localStorage, deviceIsDark()));
-  }, []);
+  const textSize = useSaved(loadTextSize, "large");
+  const theme = useSaved(loadColorTheme, "warm-cream");
+  const dark = useSaved(loadDark, false);
 
   function chooseTextSize(size: TextSize) {
-    setTextSize(size);
-    saveTextSize(localStorage, size);
+    saveTextSize(savedStorage, size);
     applyTextSize(size);
   }
 
   function chooseTheme(next: ColorTheme) {
-    setTheme(next);
-    saveColorTheme(localStorage, next);
+    saveColorTheme(savedStorage, next);
     applyTheme(next, dark);
   }
 
   function chooseDark(next: boolean) {
-    setDark(next);
-    saveDarkMode(localStorage, next);
+    saveDarkMode(savedStorage, next);
     applyTheme(theme, next);
   }
 

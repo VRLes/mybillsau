@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { savedStorage, useSaved, type SavedStorage } from "@/lib/savedValue";
 
 type Region = "Australia" | "UK" | "US";
 type Topic = "Length" | "Weight" | "Temperature" | "Cooking" | "Speed" | "Area" | "Fuel";
@@ -133,6 +134,12 @@ const topics: { name: Topic; hint: string }[] = [
 
 const regions: Region[] = ["Australia", "UK", "US"];
 
+/** Which country's spoons, cups and gallons the Person uses (Australia unless they chose). */
+function loadRegion(storage: SavedStorage): Region {
+  const saved = storage.getItem("measureRegion");
+  return saved === "UK" || saved === "US" ? saved : "Australia";
+}
+
 // Shows up to 3 decimal places, with commas for big numbers
 function fmt(n: number): string {
   return n.toLocaleString("en-AU", { maximumFractionDigits: 3 });
@@ -149,19 +156,11 @@ export default function ConverterPage() {
   const [conversion, setConversion] = useState<Conversion | null>(null);
   const [reversed, setReversed] = useState(false);
   const [input, setInput] = useState("");
-  const [region, setRegion] = useState<Region>("Australia");
-
   // Remember which country's spoons and cups the person uses
-  useEffect(() => {
-    const saved = localStorage.getItem("measureRegion");
-    if (saved === "Australia" || saved === "UK" || saved === "US") {
-      setRegion(saved);
-    }
-  }, []);
+  const region = useSaved(loadRegion, "Australia");
 
   function chooseRegion(r: Region) {
-    setRegion(r);
-    localStorage.setItem("measureRegion", r);
+    savedStorage.setItem("measureRegion", r);
   }
 
   function pickTopic(t: Topic) {
