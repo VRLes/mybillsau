@@ -78,6 +78,10 @@ _Avoid_: Night mode
 The Colour theme with the strongest difference between text and background, for a Person with low vision.
 _Avoid_: Accessible mode, vision mode
 
+**Calendar**:
+The month view of Bills on the My Bills page, with a mark on each day that has a Bill. It stays closed until the Person opens it, and is still open when they come back from Help.
+_Avoid_: Planner, schedule, month view
+
 **Handy tools**:
 The extras that live outside bill tracking: the Calculator and the Converter, grouped behind one button.
 _Avoid_: Toolkit, utilities, extras
