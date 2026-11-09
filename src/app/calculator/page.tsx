@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Delete } from "lucide-react";
 import { Bill } from "@/types/bill";
 import { useSaved } from "@/lib/savedValue";
@@ -91,6 +91,16 @@ export default function CalculatorPage() {
       }
       return next;
     });
+  }
+
+  // Brings the bill list into view, and moves keyboard/screen-reader focus there too
+  const billsHeading = useRef<HTMLHeadingElement>(null);
+  function goToBills() {
+    const heading = billsHeading.current;
+    if (!heading) return;
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    heading.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+    heading.focus({ preventScroll: true });
   }
 
   // Puts the ticked total onto the calculator screen, ready to use
@@ -203,26 +213,36 @@ export default function CalculatorPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--bg-page)] p-4 sm:p-8 max-w-md mx-auto w-full">
-      <h1 className="text-4xl font-bold mb-6 text-[var(--text-primary)]">
+    // Pulled up by the Help row's height (-mt-16) so the heading sits beside
+    // Help, which keeps its spot. This page only: the keypad must fit on phones.
+    // (Help is hidden when printing, so the pull-up is too.)
+    <main className="min-h-screen bg-[var(--bg-page)] px-4 pb-4 sm:px-8 sm:pb-8 -mt-16 print:mt-0 max-w-md mx-auto w-full">
+      {/* h-16 (including pt-4) matches the Help row's height. w-fit so the heading never
+          covers the Help button. A size smaller than other pages' headings (text-4xl),
+          so it fits beside Help at Extra large text. */}
+      <h1 className="w-fit pt-4 h-16 flex items-center text-3xl font-bold mb-3 text-[var(--text-primary)]">
         Calculator
       </h1>
 
-      {/* The screen. The small line shows the sum in progress, so nothing has to be remembered */}
-
-      
-      <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-5 mb-4 text-right">
-        <p className="text-[var(--text-secondary)] text-xl min-h-[1.75rem]">
-          {stored !== null && op ? `${tidy(stored)} ${op}` : ""}
+      {/* The screen. The small line shows the sum in progress, so nothing has to be remembered.
+          A message (like dividing by zero) takes that line's place, so no extra row is needed. */}
+      <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md px-4 py-3 mb-3 text-right">
+        {/* Screen readers hear only the message, not every sum in progress */}
+        <p role="status" className="sr-only">
+          {note}
         </p>
-        <p className="text-5xl font-bold text-[var(--text-primary)] break-all">
+        <p
+          aria-hidden={note ? true : undefined}
+          className={`text-xl min-h-[1.75rem] ${
+            note ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-secondary)]"
+          }`}
+        >
+          {note || (stored !== null && op ? `${tidy(stored)} ${op}` : "")}
+        </p>
+        <p className="text-4xl font-bold text-[var(--text-primary)] break-all">
           {display}
         </p>
       </div>
-
-      <p className="text-[var(--text-primary)] text-lg font-medium min-h-[1.75rem] mb-2">
-        {note}
-      </p>
 
       <div className="grid grid-cols-4 gap-3">
         <Key label="Clear" onPress={() => clearAll()} style="clear" wide />
@@ -260,8 +280,21 @@ export default function CalculatorPage() {
         <Key label="=" onPress={pressEquals} style="equals" ariaLabel="equals" />
         <Key label="+" onPress={() => pressOperator("+")} style="operator" ariaLabel="plus" />
       </div>
-    <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-3 text-[var(--text-primary)]">
+
+      {/* Always shown, so the Person knows the bills are down there (even if there are none) */}
+      <button
+        onClick={goToBills}
+        className="mt-3 w-full h-14 rounded-xl text-xl font-semibold shadow-md bg-[var(--bg-card)] border-2 border-[var(--accent-button-bg)] text-[var(--accent-text)] active:scale-95 transition-all"
+      >
+        <span aria-hidden="true">↓ </span>Add up your unpaid bills
+      </button>
+
+      <div className="mt-8">
+        <h2
+          ref={billsHeading}
+          tabIndex={-1}
+          className="text-2xl font-bold mb-3 text-[var(--text-primary)] scroll-mt-4 outline-none"
+        >
           Your unpaid bills
         </h2>
         <p className="text-[var(--text-secondary)] text-lg mb-4">
