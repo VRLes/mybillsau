@@ -25,6 +25,7 @@ import { UndoMessage } from "@/components/UndoMessage";
 import { DeleteQuestion } from "@/components/DeleteQuestion";
 import Link from "next/link";
 import { savedStorage, useSaved, useSavedReady } from "@/lib/savedValue";
+import { addressWithCalendar, calendarFromAddress } from "@/lib/calendarAddress";
 
 /** Brings one Bill into the middle of the screen. */
 function scrollToBill(id: string) {
@@ -42,25 +43,49 @@ function changeBills(change: (bills: Bill[]) => Bill[]) {
 }
 
 /**
- * The Bill just saved on the Add or Edit bill page, from "?highlight=" in the
- * address, so the Person can see where it went. Read from the address itself
- * (not useSearchParams, which would stop the server drawing this page), and
- * checked again by React once Next has put the new address in place.
+ * What the page address says: the Bill just saved on the Add or Edit bill page
+ * ("?highlight="), so the Person can see where it went, and whether the
+ * Calendar is open ("?calendar="). Read from the address itself (not
+ * useSearchParams, which would stop the server drawing this page), and checked
+ * again by React once Next has put the new address in place.
  */
 const addressListeners = new Set<() => void>();
 function subscribeToAddress(listener: () => void) {
   addressListeners.add(listener);
+  // The browser's own Back and Forward change the address too
+  window.addEventListener("popstate", listener);
   return () => {
     addressListeners.delete(listener);
+    window.removeEventListener("popstate", listener);
   };
+}
+function changeAddress(address: string) {
+  window.history.replaceState(null, "", address);
+  addressListeners.forEach((listener) => listener());
 }
 function billJustSaved(): string | null {
   return new URLSearchParams(window.location.search).get("highlight");
 }
 /** Takes "?highlight=" off the address, so a refresh doesn't light it up again. */
 function tidyAddress() {
-  window.history.replaceState(null, "", "/");
-  addressListeners.forEach((listener) => listener());
+  const params = new URLSearchParams(window.location.search);
+  params.delete("highlight");
+  const query = params.toString();
+  changeAddress(query ? `/?${query}` : "/");
+}
+/** The address's "?…" part (the server, with no address, is given "" instead). */
+function addressSearch(): string {
+  return window.location.search;
+}
+/** Opens the Calendar on `month`, or closes it when null, by changing the address. */
+function showCalendarOn(month: Date | null) {
+  changeAddress(addressWithCalendar(window.location.search, month));
+}
+/** Brings the open Calendar into view. */
+function scrollToCalendar() {
+  document
+    .getElementById("calendar")
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 /** How long "Marked as paid — Undo" stays up. Generous, so nobody has to rush. */
@@ -78,8 +103,14 @@ export default function Home() {
     () => (justSaved ? new Set([...highlightedIds, justSaved]) : highlightedIds),
     [highlightedIds, justSaved],
   );
-  // The calendar stays out of the way until the Person asks for it
-  const [showCalendar, setShowCalendar] = useState(false);
+  // The Calendar stays out of the way until the Person asks for it. Open or
+  // closed, and the month shown, live in the address, so coming back from Help
+  // finds it as it was.
+  const search = useSyncExternalStore(subscribeToAddress, addressSearch, () => "");
+  const calendarMonth = useMemo(() => calendarFromAddress(search, new Date()), [search]);
+  const showCalendar = calendarMonth !== null;
+  // Whether the Calendar named in the address on arrival has been brought into view
+  const calendarScrollDone = useRef(false);
   // What Undo needs while "Marked as paid — Undo" is showing
   const [undo, setUndo] = useState<MarkPaidUndo | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -96,6 +127,19 @@ export default function Home() {
     const timer = setTimeout(tidyAddress, 2500);
     return () => clearTimeout(timer);
   }, [loaded, justSaved]);
+
+  useEffect(() => {
+    // Coming back to an open Calendar (from Help, say): bring it into view, once.
+    // The address can catch up a moment after the page is back, so keep
+    // watching until the Calendar shows, unless the Person opened it here.
+    if (!loaded || !showCalendar || justSaved || calendarScrollDone.current) return;
+    // After the browser puts back the old scroll position, which would undo this
+    const timer = setTimeout(() => {
+      calendarScrollDone.current = true;
+      scrollToCalendar();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [loaded, showCalendar, justSaved]);
 
   // Worked out on every draw, never remembered, so it can't go stale overnight
   const today = todayLocal();
@@ -185,7 +229,11 @@ export default function Home() {
 
       <div className="flex flex-wrap gap-3 mt-8 mb-6">
         <button
-          onClick={() => setShowCalendar((shown) => !shown)}
+          onClick={() => {
+            // Opened right here, so it's already in view: no need to jump to it
+            calendarScrollDone.current = true;
+            showCalendarOn(showCalendar ? null : new Date());
+          }}
           aria-expanded={showCalendar}
           className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-all"
         >
@@ -201,8 +249,13 @@ export default function Home() {
         )}
       </div>
 
-      {showCalendar && (
-        <CalendarView bills={bills} onSelectDay={handleSelectDay} />
+      {calendarMonth && (
+        <CalendarView
+          bills={bills}
+          month={calendarMonth}
+          onChangeMonth={showCalendarOn}
+          onSelectDay={handleSelectDay}
+        />
       )}
 
       <UndoMessage
