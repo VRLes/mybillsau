@@ -9,21 +9,21 @@ const DARK_KEY = "darkMode";
 
 /** The three choices, with the words the Person sees. */
 export const COLOR_THEMES: { id: ColorTheme; label: string }[] = [
-  { id: "warm-cream", label: "Warm Cream" },
   { id: "blue", label: "Blue" },
+  { id: "warm-cream", label: "Warm Cream" },
   { id: "high-contrast", label: "High contrast" },
 ];
 
 /**
- * The Person's remembered Colour theme, or Warm Cream. Green was removed;
- * anyone who had it gets Blue, the closest one left. "sage" is Warm Cream's
- * old saved name.
+ * The Person's remembered Colour theme, or Blue, the one the app starts on.
+ * "sage" is Warm Cream's old saved name. Green was removed, so anyone who had
+ * it gets Blue like everything else it doesn't know.
  */
 export function loadColorTheme(storage: ThemeStorage): ColorTheme {
   const saved = storage.getItem(THEME_KEY);
-  if (saved === "blue" || saved === "green") return "blue";
+  if (saved === "warm-cream" || saved === "sage") return "warm-cream";
   if (saved === "high-contrast") return "high-contrast";
-  return "warm-cream";
+  return "blue";
 }
 
 export function saveColorTheme(storage: ThemeStorage, theme: ColorTheme): void {

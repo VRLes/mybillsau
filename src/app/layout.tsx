@@ -17,12 +17,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My Bills",
+  title: "My Bills AU",
   description:
     "A simple bill tracker, calculator and unit converter, made easy to read and use.",
   // This is the name shown under the icon on an iPhone home screen
   appleWebApp: {
-    title: "My Bills",
+    title: "My Bills AU",
   },
 };
 
