@@ -49,7 +49,7 @@ export function BillForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-[var(--bg-card)] rounded-2xl shadow-md p-6 mb-6 space-y-4"
+      className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-6 mb-6 space-y-4"
     >
       <div>
         <label className="block text-base font-medium mb-1 text-[var(--text-primary)]">
@@ -145,7 +145,7 @@ export function BillForm({
 
       <button
         type="submit"
-        className="w-full bg-[var(--accent-button-bg)] text-white text-xl font-semibold rounded-xl py-4 shadow-md hover:bg-[var(--accent-button-hover)] hover:shadow-lg transition-all"
+        className="w-full bg-[var(--accent-button-bg)] text-[var(--on-accent)] text-xl font-semibold rounded-xl py-4 shadow-md hover:bg-[var(--accent-button-hover)] hover:shadow-lg transition-all"
       >
         {saveLabel}
       </button>

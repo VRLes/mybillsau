@@ -41,13 +41,13 @@ export default function EditBillPage() {
       </h1>
 
       {bill === null && (
-        <div className="bg-[var(--bg-card)] rounded-2xl shadow-md p-6 space-y-4">
+        <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-6 space-y-4">
           <p className="text-xl text-[var(--text-primary)]">
             We couldn&apos;t find that bill. Nothing has changed.
           </p>
           <Link
             href="/"
-            className="block w-full text-center bg-[var(--accent-button-bg)] text-white text-xl font-semibold rounded-xl py-4 shadow-md"
+            className="block w-full text-center bg-[var(--accent-button-bg)] text-[var(--on-accent)] text-xl font-semibold rounded-xl py-4 shadow-md"
           >
             Back to My Bills
           </Link>

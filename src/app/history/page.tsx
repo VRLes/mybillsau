@@ -66,7 +66,7 @@ export default function HistoryPage() {
             {recent.map((bill) => (
               <li
                 key={bill.id}
-                className="bg-[var(--bg-card)] rounded-2xl shadow-md p-6 flex items-center gap-4"
+                className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-6 flex items-center gap-4"
               >
                 <BillIcon category={bill.category} />
                 <div className="flex-1">
@@ -90,7 +90,7 @@ export default function HistoryPage() {
         For tax time
       </h2>
 
-      <div className="print:hidden bg-[var(--bg-card)] rounded-2xl shadow-md p-6 mb-6 space-y-4">
+      <div className="print:hidden bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-6 mb-6 space-y-4">
         <p className="text-lg font-medium text-[var(--text-primary)]">
           Choose a date range
         </p>
@@ -100,7 +100,7 @@ export default function HistoryPage() {
             onClick={() => applyPreset("thisFY")}
             className={`text-lg font-medium rounded-xl px-5 py-3 border-2 transition-all ${
               activePreset === "thisFY"
-                ? "bg-[var(--accent-button-bg)] text-white border-[var(--accent-button-bg)]"
+                ? "bg-[var(--accent-button-bg)] text-[var(--on-accent)] border-[var(--accent-button-bg)]"
                 : "bg-[var(--bg-card)] text-[var(--text-primary)] border-[var(--border-default)]"
             }`}
           >
@@ -110,7 +110,7 @@ export default function HistoryPage() {
             onClick={() => applyPreset("lastFY")}
             className={`text-lg font-medium rounded-xl px-5 py-3 border-2 transition-all ${
               activePreset === "lastFY"
-                ? "bg-[var(--accent-button-bg)] text-white border-[var(--accent-button-bg)]"
+                ? "bg-[var(--accent-button-bg)] text-[var(--on-accent)] border-[var(--accent-button-bg)]"
                 : "bg-[var(--bg-card)] text-[var(--text-primary)] border-[var(--border-default)]"
             }`}
           >
@@ -163,7 +163,7 @@ export default function HistoryPage() {
 
       {rangeStart && rangeEnd && (
         <>
-          <div className="bg-[var(--bg-card)] rounded-2xl shadow-md p-5 mb-6 flex items-center justify-between">
+          <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-5 mb-6 flex items-center justify-between">
             <div>
               <p className="text-[var(--text-secondary)] text-sm">
                 {formatLocalDate(rangeStart, FULL_DATE)}
@@ -194,7 +194,7 @@ export default function HistoryPage() {
           {paidBillsInRange.length > 0 && (
             <button
               onClick={() => window.print()}
-              className="print:hidden w-full bg-[var(--accent-button-bg)] text-white text-xl font-semibold rounded-xl py-4 shadow-md hover:bg-[var(--accent-button-hover)] hover:shadow-lg transition-all mb-6"
+              className="print:hidden w-full bg-[var(--accent-button-bg)] text-[var(--on-accent)] text-xl font-semibold rounded-xl py-4 shadow-md hover:bg-[var(--accent-button-hover)] hover:shadow-lg transition-all mb-6"
             >
               Print this list
             </button>
@@ -209,7 +209,7 @@ export default function HistoryPage() {
               paidBillsInRange.map((bill) => (
                 <div
                   key={bill.id}
-                  className="bg-[var(--bg-card)] rounded-2xl shadow-md p-6 flex items-center gap-4"
+                  className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-6 flex items-center gap-4"
                 >
                   <BillIcon category={bill.category} />
                   <div className="flex-1">

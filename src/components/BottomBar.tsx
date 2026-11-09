@@ -34,7 +34,7 @@ export function BottomBar() {
                 aria-current={isCurrent ? "page" : undefined}
                 className={`flex flex-col items-center justify-center gap-1 min-h-16 rounded-xl px-1 py-2 text-lg font-semibold leading-tight text-center ${
                   isCurrent
-                    ? "bg-[var(--accent-button-bg)] text-white"
+                    ? "bg-[var(--accent-button-bg)] text-[var(--on-accent)]"
                     : "text-[var(--text-primary)] hover:bg-[var(--calendar-hover-bg)]"
                 }`}
               >

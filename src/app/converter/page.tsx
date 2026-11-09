@@ -253,7 +253,7 @@ export default function ConverterPage() {
 
         <div
           aria-live="polite"
-          className="bg-[var(--bg-card)] rounded-2xl shadow-md p-5 mb-4 text-right"
+          className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-5 mb-4 text-right"
         >
           <p className="text-[var(--text-secondary)] text-xl">{toLabel}</p>
           <p className="text-5xl font-bold text-[var(--text-primary)] break-all">

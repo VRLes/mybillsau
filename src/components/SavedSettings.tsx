@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect } from "react";
-import { applyTheme, getSavedColorTheme, getSavedDarkMode } from "@/lib/theme";
+import { applyTheme, deviceIsDark, loadColorTheme, loadDarkMode } from "@/lib/theme";
 import { applyTextSize, loadTextSize } from "@/lib/textSize";
 
 /**
@@ -12,7 +12,7 @@ import { applyTextSize, loadTextSize } from "@/lib/textSize";
  */
 export function SavedSettings() {
   useLayoutEffect(() => {
-    applyTheme(getSavedColorTheme(), getSavedDarkMode());
+    applyTheme(loadColorTheme(localStorage), loadDarkMode(localStorage, deviceIsDark()));
     applyTextSize(loadTextSize(localStorage));
   }, []);
   return null;

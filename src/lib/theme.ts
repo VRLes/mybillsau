@@ -1,22 +1,64 @@
-export type ColorTheme = "sage" | "green" | "blue";
+/** The Colour theme the Person picked in Settings. */
+export type ColorTheme = "warm-cream" | "blue" | "high-contrast";
 
-export function getSavedColorTheme(): ColorTheme {
-  const saved = localStorage.getItem("colorTheme");
-  if (saved === "green" || saved === "blue") return saved;
-  return "sage";
+/** The part of browser storage this module needs (localStorage fits). */
+export type ThemeStorage = Pick<Storage, "getItem" | "setItem">;
+
+const THEME_KEY = "colorTheme";
+const DARK_KEY = "darkMode";
+
+/** The three choices, with the words the Person sees. */
+export const COLOR_THEMES: { id: ColorTheme; label: string }[] = [
+  { id: "warm-cream", label: "Warm Cream" },
+  { id: "blue", label: "Blue" },
+  { id: "high-contrast", label: "High contrast" },
+];
+
+/**
+ * The Person's remembered Colour theme, or Warm Cream. Green was removed;
+ * anyone who had it gets Blue, the closest one left. "sage" is Warm Cream's
+ * old saved name.
+ */
+export function loadColorTheme(storage: ThemeStorage): ColorTheme {
+  const saved = storage.getItem(THEME_KEY);
+  if (saved === "blue" || saved === "green") return "blue";
+  if (saved === "high-contrast") return "high-contrast";
+  return "warm-cream";
 }
 
-export function getSavedDarkMode(): boolean {
-  return localStorage.getItem("darkMode") === "dark";
+export function saveColorTheme(storage: ThemeStorage, theme: ColorTheme): void {
+  storage.setItem(THEME_KEY, theme);
 }
 
-export function applyTheme(theme: ColorTheme, isDark: boolean) {
+/**
+ * Whether Dark mode is on. Until the Person (or a Helper) picks Light or Dark
+ * in Settings, it follows the device's own setting.
+ */
+export function loadDarkMode(storage: ThemeStorage, deviceIsDark: boolean): boolean {
+  const saved = storage.getItem(DARK_KEY);
+  if (saved === "dark") return true;
+  if (saved === "light") return false;
+  return deviceIsDark;
+}
+
+export function saveDarkMode(storage: ThemeStorage, isDark: boolean): void {
+  storage.setItem(DARK_KEY, isDark ? "dark" : "light");
+}
+
+/** True when the device is set to dark mode. */
+export function deviceIsDark(): boolean {
+  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+}
+
+/** The classes on <html> that switch the colours in globals.css. */
+export function themeClasses(theme: ColorTheme, isDark: boolean): string[] {
+  const classes = theme === "warm-cream" ? [] : [`theme-${theme}`];
+  return isDark ? [...classes, "dark"] : classes;
+}
+
+/** Puts a Colour theme and Dark mode on the page. Does not save them. */
+export function applyTheme(theme: ColorTheme, isDark: boolean): void {
   const html = document.documentElement;
-  html.classList.remove("theme-green", "theme-blue", "dark");
-  if (theme === "green") html.classList.add("theme-green");
-  if (theme === "blue") html.classList.add("theme-blue");
-  if (isDark) html.classList.add("dark");
-
-  localStorage.setItem("colorTheme", theme);
-  localStorage.setItem("darkMode", isDark ? "dark" : "light");
+  html.classList.remove("theme-blue", "theme-high-contrast", "dark");
+  html.classList.add(...themeClasses(theme, isDark));
 }
