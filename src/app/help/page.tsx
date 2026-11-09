@@ -92,7 +92,7 @@ export default function HelpPage() {
         steps={[
           "Tap the numbers, then tap + − × or ÷, then tap the next number.",
           "Tap = to see the answer.",
-          "Tap Clear to start again, or Back to remove the last number you typed.",
+          "Tap Clear to start again, or Delete to remove the last number you typed.",
           "To add up bills, scroll down and tick the bills you want.",
           "Tap Use this total to put the amount on the calculator screen.",
         ]}

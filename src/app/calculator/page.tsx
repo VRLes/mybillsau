@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { Delete } from "lucide-react";
 import { Bill } from "@/types/bill";
 import { useSaved } from "@/lib/savedValue";
 import { loadBills, unpaidBills } from "@/lib/bills";
@@ -29,7 +30,7 @@ function Key({
   wide = false,
   ariaLabel,
 }: {
-  label: string;
+  label: ReactNode;
   onPress: () => void;
   style?: "number" | "operator" | "equals" | "clear";
   wide?: boolean;
@@ -49,7 +50,7 @@ function Key({
   return (
     <button
       onClick={onPress}
-      aria-label={ariaLabel ?? label}
+      aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
       className={`h-16 rounded-xl text-2xl font-semibold shadow-md active:scale-95 transition-all ${
         styles[style]
       } ${wide ? "col-span-2" : ""}`}
@@ -225,7 +226,18 @@ export default function CalculatorPage() {
 
       <div className="grid grid-cols-4 gap-3">
         <Key label="Clear" onPress={() => clearAll()} style="clear" wide />
-        <Key label="Back" onPress={pressBack} style="clear" ariaLabel="Remove last number" />
+        <Key
+          label={
+            // Not "Back": that word means "go to the last page" everywhere else
+            <span className="flex flex-col items-center leading-none">
+              <Delete aria-hidden="true" className="size-7" />
+              <span className="text-base mt-0.5">Delete</span>
+            </span>
+          }
+          onPress={pressBack}
+          style="clear"
+          ariaLabel="Remove last number"
+        />
         <Key label="%" onPress={pressPercent} style="operator" ariaLabel="percent" />
 
         <Key label="7" onPress={() => pressDigit("7")} />

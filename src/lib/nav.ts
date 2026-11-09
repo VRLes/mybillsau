@@ -17,6 +17,7 @@ export const TABS: { id: Tab; label: string; href: string }[] = [
 const PAGES: Record<string, { tab: Tab | null; helpTopic?: string }> = {
   "/": { tab: "my-bills" },
   "/add": { tab: "my-bills" },
+  "/edit": { tab: "my-bills" },
   "/history": { tab: "paid-bills", helpTopic: "history" },
   "/handy-tools": { tab: "handy-tools" },
   "/calculator": { tab: "handy-tools", helpTopic: "calculator" },
