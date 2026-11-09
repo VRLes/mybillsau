@@ -215,8 +215,11 @@ export default function CalculatorPage() {
   return (
     // Pulled up by the Help row's height (-mt-16) so the heading sits beside
     // Help, which keeps its spot. This page only: the keypad must fit on phones.
-    <main className="min-h-screen bg-[var(--bg-page)] px-4 pb-4 sm:px-8 sm:pb-8 -mt-16 max-w-md mx-auto w-full">
-      {/* w-fit so the heading never covers the Help button; pt-4 + h-12 matches the Help row */}
+    // (Help is hidden when printing, so the pull-up is too.)
+    <main className="min-h-screen bg-[var(--bg-page)] px-4 pb-4 sm:px-8 sm:pb-8 -mt-16 print:mt-0 max-w-md mx-auto w-full">
+      {/* h-16 (including pt-4) matches the Help row's height. w-fit so the heading never
+          covers the Help button. A size smaller than other pages' headings (text-4xl),
+          so it fits beside Help at Extra large text. */}
       <h1 className="w-fit pt-4 h-16 flex items-center text-3xl font-bold mb-3 text-[var(--text-primary)]">
         Calculator
       </h1>
@@ -224,8 +227,12 @@ export default function CalculatorPage() {
       {/* The screen. The small line shows the sum in progress, so nothing has to be remembered.
           A message (like dividing by zero) takes that line's place, so no extra row is needed. */}
       <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md px-4 py-3 mb-3 text-right">
+        {/* Screen readers hear only the message, not every sum in progress */}
+        <p role="status" className="sr-only">
+          {note}
+        </p>
         <p
-          role="status"
+          aria-hidden={note ? true : undefined}
           className={`text-xl min-h-[1.75rem] ${
             note ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-secondary)]"
           }`}
@@ -284,7 +291,6 @@ export default function CalculatorPage() {
 
       <div className="mt-8">
         <h2
-          id="unpaid-bills"
           ref={billsHeading}
           tabIndex={-1}
           className="text-2xl font-bold mb-3 text-[var(--text-primary)] scroll-mt-4 outline-none"

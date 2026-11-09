@@ -14,6 +14,9 @@ export function HelpButton() {
 
   return (
     <div className="print:hidden max-w-2xl w-full mx-auto px-4 pt-4 sm:px-8 flex justify-end">
+      {/* relative z-10: the Calculator page pulls its heading up beside Help (-mt-16,
+          matching this row's pt-4 + min-h-12), so keep Help on top and tappable.
+          Change this row's height and the calculator heading needs changing too. */}
       <Link
         href={helpHref(pathname)}
         aria-current={pathname === "/help" ? "page" : undefined}
