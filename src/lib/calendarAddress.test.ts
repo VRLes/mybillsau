@@ -5,7 +5,7 @@ import { calendarFromAddress, addressWithCalendar } from "./calendarAddress";
 const TODAY = new Date(2026, 10, 9);
 
 describe("calendarFromAddress: is the Calendar open, and on which month", () => {
-  it("stays closed when the address says nothing about the calendar", () => {
+  it("stays closed when the address says nothing about the Calendar", () => {
     expect(calendarFromAddress("", TODAY)).toBeNull();
     expect(calendarFromAddress("?highlight=abc", TODAY)).toBeNull();
   });
@@ -22,7 +22,7 @@ describe("calendarFromAddress: is the Calendar open, and on which month", () => 
     }
   });
 
-  it("reads the calendar alongside other things in the address", () => {
+  it("reads the Calendar alongside other things in the address", () => {
     expect(calendarFromAddress("?highlight=abc&calendar=2026-03", TODAY)).toEqual(
       new Date(2026, 2, 1),
     );
@@ -31,32 +31,32 @@ describe("calendarFromAddress: is the Calendar open, and on which month", () => 
 
 describe("addressWithCalendar: the address to show for the Calendar", () => {
   it("names the year and month of the month shown", () => {
-    expect(addressWithCalendar("/", "", new Date(2026, 11, 15))).toBe("/?calendar=2026-12");
-    expect(addressWithCalendar("/", "", new Date(2027, 0, 1))).toBe("/?calendar=2027-01");
+    expect(addressWithCalendar("", new Date(2026, 11, 15))).toBe("/?calendar=2026-12");
+    expect(addressWithCalendar("", new Date(2027, 0, 1))).toBe("/?calendar=2027-01");
   });
 
   it("replaces the month already in the address", () => {
-    expect(addressWithCalendar("/", "?calendar=2026-11", new Date(2026, 11, 1))).toBe(
+    expect(addressWithCalendar("?calendar=2026-11", new Date(2026, 11, 1))).toBe(
       "/?calendar=2026-12",
     );
   });
 
-  it("takes the calendar out of the address when it is hidden", () => {
-    expect(addressWithCalendar("/", "?calendar=2026-11", null)).toBe("/");
+  it("takes the Calendar out of the address when it is hidden", () => {
+    expect(addressWithCalendar("?calendar=2026-11", null)).toBe("/");
   });
 
   it("leaves everything else in the address alone", () => {
-    expect(addressWithCalendar("/", "?highlight=abc", new Date(2026, 11, 1))).toBe(
+    expect(addressWithCalendar("?highlight=abc", new Date(2026, 11, 1))).toBe(
       "/?highlight=abc&calendar=2026-12",
     );
-    expect(addressWithCalendar("/", "?highlight=abc&calendar=2026-11", null)).toBe(
+    expect(addressWithCalendar("?highlight=abc&calendar=2026-11", null)).toBe(
       "/?highlight=abc",
     );
   });
 
   it("reads back as the same month", () => {
     const month = new Date(2028, 1, 1);
-    const address = addressWithCalendar("/", "", month);
-    expect(calendarFromAddress(address.slice(1), TODAY)).toEqual(month);
+    const address = addressWithCalendar("", month);
+    expect(calendarFromAddress(new URL(address, "http://x").search, TODAY)).toEqual(month);
   });
 });

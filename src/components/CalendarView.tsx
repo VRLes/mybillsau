@@ -128,7 +128,7 @@ export function CalendarView({
                   ? `${date.getDate()}: ${dayBills.map((b) => b.name).join(", ")}`
                   : `${date.getDate()}, no bills`
               }
-              className={`min-h-[4.5rem] rounded-xl flex flex-col items-center justify-start pt-1 pb-1.5 ${
+              className={`min-h-[4.5rem] sm:min-h-[5.5rem] rounded-xl flex flex-col items-center justify-start pt-1 pb-1.5 ${
                 isToday(date)
                   ? "border-4 border-[var(--calendar-today-border)]"
                   : status === "overdue"

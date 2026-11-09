@@ -6,7 +6,7 @@
  * Calendar starts closed.
  */
 
-const PARAM = "calendar";
+const CALENDAR_PARAM = "calendar";
 const YEAR_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
 
 /**
@@ -14,24 +14,20 @@ const YEAR_MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
  * A month that can't be read still opens the Calendar, on this month.
  */
 export function calendarFromAddress(search: string, today: Date): Date | null {
-  const value = new URLSearchParams(search).get(PARAM);
+  const value = new URLSearchParams(search).get(CALENDAR_PARAM);
   if (value === null) return null;
   const match = YEAR_MONTH.exec(value);
   if (!match) return new Date(today.getFullYear(), today.getMonth(), 1);
   return new Date(Number(match[1]), Number(match[2]) - 1, 1);
 }
 
-/** The address with the Calendar open on `month`, or with it taken out when null. */
-export function addressWithCalendar(
-  pathname: string,
-  search: string,
-  month: Date | null,
-): string {
+/** The My Bills address with the Calendar open on `month`, or taken out when null. */
+export function addressWithCalendar(search: string, month: Date | null): string {
   const params = new URLSearchParams(search);
-  if (month) params.set(PARAM, yearMonth(month));
-  else params.delete(PARAM);
+  if (month) params.set(CALENDAR_PARAM, yearMonth(month));
+  else params.delete(CALENDAR_PARAM);
   const query = params.toString();
-  return query ? `${pathname}?${query}` : pathname;
+  return query ? `/?${query}` : "/";
 }
 
 function yearMonth(month: Date): string {

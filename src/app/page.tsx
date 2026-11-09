@@ -52,8 +52,11 @@ function changeBills(change: (bills: Bill[]) => Bill[]) {
 const addressListeners = new Set<() => void>();
 function subscribeToAddress(listener: () => void) {
   addressListeners.add(listener);
+  // The browser's own Back and Forward change the address too
+  window.addEventListener("popstate", listener);
   return () => {
     addressListeners.delete(listener);
+    window.removeEventListener("popstate", listener);
   };
 }
 function changeAddress(address: string) {
@@ -70,13 +73,13 @@ function tidyAddress() {
   const query = params.toString();
   changeAddress(query ? `/?${query}` : "/");
 }
-/** The address's "?…" part, or "" on the server, where there is no address. */
+/** The address's "?…" part (the server, with no address, is given "" instead). */
 function addressSearch(): string {
   return window.location.search;
 }
 /** Opens the Calendar on `month`, or closes it when null, by changing the address. */
 function showCalendarOn(month: Date | null) {
-  changeAddress(addressWithCalendar("/", window.location.search, month));
+  changeAddress(addressWithCalendar(window.location.search, month));
 }
 /** Brings the open Calendar into view. */
 function scrollToCalendar() {
@@ -100,14 +103,14 @@ export default function Home() {
     () => (justSaved ? new Set([...highlightedIds, justSaved]) : highlightedIds),
     [highlightedIds, justSaved],
   );
-  // The calendar stays out of the way until the Person asks for it. Open or
+  // The Calendar stays out of the way until the Person asks for it. Open or
   // closed, and the month shown, live in the address, so coming back from Help
   // finds it as it was.
   const search = useSyncExternalStore(subscribeToAddress, addressSearch, () => "");
   const calendarMonth = useMemo(() => calendarFromAddress(search, new Date()), [search]);
   const showCalendar = calendarMonth !== null;
-  // Whether the page has done its first look at the address, once Bills are on screen
-  const arrived = useRef(false);
+  // Whether the Calendar named in the address on arrival has been brought into view
+  const calendarScrollDone = useRef(false);
   // What Undo needs while "Marked as paid — Undo" is showing
   const [undo, setUndo] = useState<MarkPaidUndo | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -126,15 +129,13 @@ export default function Home() {
   }, [loaded, justSaved]);
 
   useEffect(() => {
-    // Coming back to an open Calendar (from Help, say): bring it into view, once
-    if (!loaded || arrived.current) return;
-    if (!showCalendar || justSaved) {
-      arrived.current = true;
-      return;
-    }
+    // Coming back to an open Calendar (from Help, say): bring it into view, once.
+    // The address can catch up a moment after the page is back, so keep
+    // watching until the Calendar shows, unless the Person opened it here.
+    if (!loaded || !showCalendar || justSaved || calendarScrollDone.current) return;
     // After the browser puts back the old scroll position, which would undo this
     const timer = setTimeout(() => {
-      arrived.current = true;
+      calendarScrollDone.current = true;
       scrollToCalendar();
     }, 150);
     return () => clearTimeout(timer);
@@ -228,7 +229,11 @@ export default function Home() {
 
       <div className="flex flex-wrap gap-3 mt-8 mb-6">
         <button
-          onClick={() => showCalendarOn(showCalendar ? null : new Date())}
+          onClick={() => {
+            // Opened right here, so it's already in view: no need to jump to it
+            calendarScrollDone.current = true;
+            showCalendarOn(showCalendar ? null : new Date());
+          }}
           aria-expanded={showCalendar}
           className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-all"
         >
