@@ -1,4 +1,4 @@
-# My Bills: project overview
+# My Bills AU: project overview
 
 Technical notes moved here from `CONTEXT.md` on 8 November 2026, so `CONTEXT.md` can stay a pure glossary.
 
@@ -77,7 +77,7 @@ src/
 - Mark as Paid — saves the paid date, with Undo; the Bill moves to Paid Bills
 - Repeating bills — How often (Just once, Every month, Every 3 months, Every year) on Add a bill. Marking one paid brings in the next Bill one period later (month-end clamped, e.g. 31 Jan to 28/29 Feb, back to the 31st when the month allows) with an Estimated amount shown as "about $X — Change if different". Undo removes it again. Only one open Bill per series (ADR 0001). Bills saved before this are Just once
 - Delete bill — confirms before deleting
-- Settings at the bottom of My Bills: Text size (Normal / Large / Extra large, default Large, remembered), Colour theme (Warm Cream / Blue / High contrast), Light or dark (follows the device until chosen), and the home screen guide
+- Settings at the bottom of My Bills: Text size (Normal / Large / Extra large, default Large, remembered), Colour theme (Blue / Warm Cream / High contrast, starts on Blue), Light or dark (follows the device until chosen), and the home screen guide
 - Colours: every theme meets 7:1 for text and 3:1 for outlines, icons and focus rings, checked by `src/app/colours.test.ts`. Overdue and Due today are said in words with an icon on each Bill card, never by colour alone
 
 ---

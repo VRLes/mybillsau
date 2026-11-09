@@ -3,14 +3,14 @@ import type { MetadataRoute } from "next";
 // This file tells Android phones the app's name, colours and icon
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "My Bills",
-    short_name: "My Bills", // shown under the icon
+    name: "My Bills AU",
+    short_name: "My Bills AU", // shown under the icon
     description:
       "A simple bill tracker, calculator and unit converter, made easy to read and use.",
     start_url: "/",
     display: "standalone", // opens like a normal app, without the browser bar
-    background_color: "#f5f1e6", // cream, shown briefly while the app opens
-    theme_color: "#4a7a2e", // sage green
+    background_color: "#e8f0f5", // pale blue, shown briefly while the app opens
+    theme_color: "#1a4e69", // deep blue
     icons: [
       { src: "/icon", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icon", sizes: "512x512", type: "image/png", purpose: "any" },

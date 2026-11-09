@@ -10,7 +10,10 @@
  * colour alone, so it stays clear with any kind of colour blindness.
  */
 
-/* Warm Cream, light (the default) */
+/*
+ * Warm Cream, light. It sits on :root as the base layer the other themes
+ * override; the app starts on Blue (see loadColorTheme in src/lib/theme.ts).
+ */
 :root {
   --bg-page: #f2ebdf;
   --bg-card: #fffdf8;

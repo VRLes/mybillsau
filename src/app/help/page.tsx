@@ -141,7 +141,7 @@ export default function HelpPage() {
           "iPhone or iPad: open this page in Safari. Tap the Share button (a square with an arrow pointing up). Scroll down and tap Add to Home Screen, then tap Add.",
           "Android phone or tablet: open this page in Chrome. Tap the three dots at the top right. Tap Add to Home screen or Install app, then confirm.",
         "Laptop or computer: open this page in Chrome or Edge. Look for a small install button at the right end of the address bar at the top, and click it. If you can't see one, click the three dots at the top right and look for Install. Then confirm. The app appears on your desktop or in your apps list.",
-          "A green icon with a bill and a tick, called My Bills, appears on your home screen. Tap it any time to open the app.",
+          "A blue icon with a bill and a tick, called My Bills AU, appears on your home screen. Tap it any time to open the app.",
         ]}
       />
     </main>

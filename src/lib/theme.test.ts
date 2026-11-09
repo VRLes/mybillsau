@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  COLOR_THEMES,
   loadColorTheme,
   loadDarkMode,
   saveColorTheme,
@@ -16,9 +17,13 @@ function storageWith(saved: Record<string, string> = {}) {
   };
 }
 
-describe("Colour theme: Warm Cream, Blue or High contrast", () => {
-  it("gives a first-time visitor Warm Cream", () => {
-    expect(loadColorTheme(storageWith())).toBe("warm-cream");
+describe("Colour theme: Blue, Warm Cream or High contrast", () => {
+  it("gives a first-time visitor Blue", () => {
+    expect(loadColorTheme(storageWith())).toBe("blue");
+  });
+
+  it("keeps a Person who chose Warm Cream", () => {
+    expect(loadColorTheme(storageWith({ colorTheme: "warm-cream" }))).toBe("warm-cream");
   });
 
   it("keeps a Person who chose Warm Cream before it was renamed", () => {
@@ -37,8 +42,12 @@ describe("Colour theme: Warm Cream, Blue or High contrast", () => {
     expect(loadColorTheme(storage)).toBe("blue");
   });
 
-  it("falls back to Warm Cream for anything it doesn't know", () => {
-    expect(loadColorTheme(storageWith({ colorTheme: "purple" }))).toBe("warm-cream");
+  it("falls back to Blue for anything it doesn't know", () => {
+    expect(loadColorTheme(storageWith({ colorTheme: "purple" }))).toBe("blue");
+  });
+
+  it("lists Blue first in Settings", () => {
+    expect(COLOR_THEMES.map((t) => t.label)).toEqual(["Blue", "Warm Cream", "High contrast"]);
   });
 });
 
