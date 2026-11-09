@@ -49,6 +49,7 @@ src/
 |---|---|---|
 | `/` | My Bills | Main dashboard — bill list, summary, calendar |
 | `/add` | Add a bill | Its own page, opened from "+ Add a bill"; Save or Cancel both return to My Bills |
+| `/edit?id=…` | Edit bill | Same layout as Add a bill, opened from Edit on any unpaid Bill; saving goes through `editBill` and confirms an Estimated amount |
 | `/history` | Paid Bills | Recently paid first (paid date, most recent first); financial-year lists and printing under "For tax time" |
 
 ---
@@ -58,7 +59,7 @@ src/
 | Component | Purpose |
 |---|---|
 | `BillIcon` | Category icon for each bill |
-| `AddBillForm` | The fields on the Add a bill page (`/add`); saving goes through `addBill` in the bills module |
+| `BillForm` | The fields on the Add a bill page (`/add`), also used by Edit bill (`/edit`) with `initial`; saving goes through `addBill` or `editBill` in the bills module |
 | `TodayAnswer` | Today's date and the answer to "Do I need to pay anything soon?" |
 | `BillGroups` | Bills grouped Overdue / Due today / Due in the next 7 days / Later / Paid |
 | `CalendarView` | Visual calendar of bill due dates |
@@ -75,6 +76,7 @@ src/
 - Calendar hidden behind "Show calendar"
 - Calendar view — click a day to highlight bills due that day
 - Mark as Paid — saves the paid date, with Undo; the Bill moves to Paid Bills
+- Repeating bills — How often (Just once, Every month, Every 3 months, Every year) on Add a bill. Marking one paid brings in the next Bill one period later (month-end clamped, e.g. 31 Jan to 28/29 Feb, back to the 31st when the month allows) with an Estimated amount shown as "about $X — Change if different". Undo removes it again. Only one open Bill per series (ADR 0001). Bills saved before this are Just once
 - Delete bill — confirms before deleting
 - Settings at the bottom of My Bills: Text size (Normal / Large / Extra large, default Large, remembered), colour theme, dark mode, and the home screen guide
 

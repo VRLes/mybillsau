@@ -2,16 +2,21 @@ import { describe, expect, it } from "vitest";
 import type { Bill } from "../types/bill";
 import {
   addBill,
+  billDetails,
   billStatus,
   billsDueOn,
+  confirmAmount,
   deleteBill,
+  editBill,
   dueSoonUntil,
   dueWords,
   financialYear,
   formatLocalDate,
+  howOften,
   loadBills,
   markPaid,
   markUnpaid,
+  nextDueDate,
   paidBillsBetween,
   paidWords,
   recentlyPaid,
@@ -516,5 +521,286 @@ describe("Showing dates", () => {
     expect(formatLocalDate("2026-07-01", { day: "numeric", month: "long", year: "numeric" })).toBe(
       "1 July 2026",
     );
+  });
+});
+
+describe("Repeating bills: the next due date", () => {
+  it("Every month is the same day next month", () => {
+    expect(nextDueDate("2026-11-15", "monthly")).toBe("2026-12-15");
+  });
+
+  it("Every month crosses into the new year", () => {
+    expect(nextDueDate("2026-12-20", "monthly")).toBe("2027-01-20");
+  });
+
+  it("Every 3 months is the same day three months later", () => {
+    expect(nextDueDate("2026-11-15", "quarterly")).toBe("2027-02-15");
+  });
+
+  it("Every year is the same day next year", () => {
+    expect(nextDueDate("2026-11-15", "yearly")).toBe("2027-11-15");
+  });
+
+  it("31 January goes to the last day of February, never into March", () => {
+    expect(nextDueDate("2027-01-31", "monthly")).toBe("2027-02-28");
+    expect(nextDueDate("2028-01-31", "monthly")).toBe("2028-02-29"); // leap year
+  });
+
+  it("31 May every 3 months goes to 31 August, and 30 November to 28 February", () => {
+    expect(nextDueDate("2026-05-31", "quarterly")).toBe("2026-08-31");
+    expect(nextDueDate("2026-11-30", "quarterly")).toBe("2027-02-28");
+  });
+
+  it("29 February every year goes to 28 February in a year that isn't a leap year", () => {
+    expect(nextDueDate("2028-02-29", "yearly")).toBe("2029-02-28");
+  });
+
+  it("a clamped series goes back to its own day when the month is long enough", () => {
+    // Due on the 31st: Feb is clamped to the 28th, but March is the 31st again
+    expect(nextDueDate("2027-02-28", "monthly", 31)).toBe("2027-03-31");
+    // Due on 29 Feb: the next leap year is the 29th again
+    expect(nextDueDate("2031-02-28", "yearly", 29)).toBe("2032-02-29");
+  });
+});
+
+describe("Repeating bills: How often", () => {
+  it("Add a bill keeps the How often chosen, starting a series of its own", () => {
+    const [added] = addBill(
+      [],
+      { name: "Rent", amount: 400, dueDate: "2026-11-15", category: "rent", howOften: "monthly" },
+      "r1",
+    );
+    expect(howOften(added)).toBe("monthly");
+    expect(added.seriesId).toBe("r1");
+  });
+
+  it("a Just once Bill is saved the same way Bills always were", () => {
+    const [added] = addBill(
+      [],
+      { name: "Plumber", amount: 150, dueDate: "2026-11-15", category: "other", howOften: "once" },
+      "p1",
+    );
+    expect(added).toEqual({
+      id: "p1", name: "Plumber", amount: 150, dueDate: "2026-11-15", paid: false, category: "other",
+    });
+  });
+
+  it("Bills saved before How often existed load as Just once", () => {
+    const saved =
+      '[{"id":"1","name":"Electricity","amount":120.5,"dueDate":"2026-11-15","paid":false,"category":"electricity"}]';
+    const [loaded] = loadBills({ getItem: () => saved, setItem: () => {} });
+    expect(howOften(loaded)).toBe("once");
+  });
+});
+
+describe("Repeating bills: the next Bill", () => {
+  const rent = bill({
+    id: "r1", name: "Rent", amount: 400, dueDate: "2026-11-15", category: "rent",
+    howOften: "monthly", seriesId: "r1", dueDay: 15,
+  });
+
+  it("marking a Repeating bill paid adds exactly one next Bill, one period later, with an Estimated amount", () => {
+    const { bills } = markPaid([rent], "r1", "2026-11-14");
+    expect(bills).toHaveLength(2);
+    const next = bills[1];
+    expect(next).toMatchObject({
+      name: "Rent", amount: 400, category: "rent", dueDate: "2026-12-15",
+      paid: false, howOften: "monthly", seriesId: "r1", dueDay: 15, estimated: true,
+    });
+    expect(next).not.toHaveProperty("paidDate");
+    expect(next.id).not.toBe("r1");
+  });
+
+  it("the next Bill copies the last amount, whatever it was", () => {
+    const { bills } = markPaid([{ ...rent, amount: 412.35 }], "r1", "2026-11-14");
+    expect(bills[1].amount).toBe(412.35);
+  });
+
+  it("a series due on the 31st keeps coming back to the 31st", () => {
+    const power = { ...rent, dueDate: "2027-01-31", dueDay: 31 };
+    const afterJan = markPaid([power], "r1", "2027-01-30").bills;
+    const feb = afterJan[1];
+    expect(feb.dueDate).toBe("2027-02-28");
+    const mar = markPaid(afterJan, feb.id, "2027-02-27").bills[2];
+    expect(mar.dueDate).toBe("2027-03-31");
+  });
+
+  it("a Just once Bill adds nothing when paid", () => {
+    expect(markPaid([bill({ id: "a" })], "a", "2026-11-08").bills).toHaveLength(1);
+  });
+
+  it("Undo of Mark as Paid also removes the next Bill", () => {
+    const marked = markPaid([rent], "r1", "2026-11-14");
+    expect(undoMarkPaid(marked.bills, marked.undo!)).toEqual([rent]);
+  });
+
+  it("never two open Bills in one series: paying again after the next one exists adds no more", () => {
+    // e.g. marked paid, unpaid by mistake some other way, then paid again
+    const next = { ...rent, id: "r2", dueDate: "2026-12-15", estimated: true };
+    const { bills } = markPaid([rent, next], "r1", "2026-11-14");
+    expect(bills.filter((b) => b.seriesId === "r1" && !b.paid)).toEqual([next]);
+  });
+
+  /** Open Bills in the rent series, by due date. */
+  function openRent(bills: Bill[]) {
+    return bills.filter((b) => b.seriesId === "r1" && !b.paid).map((b) => b.dueDate);
+  }
+
+  it("never two open Bills in one series, however paid Bills are marked unpaid again", () => {
+    // Pay Nov and Dec, then mark both unpaid again, oldest first
+    const afterNov = markPaid([rent], "r1", "2026-11-14").bills;
+    const dec = afterNov[1];
+    const afterDec = markPaid(afterNov, dec.id, "2026-12-14").bills;
+    const novUnpaid = markUnpaid(afterDec, "r1");
+    expect(openRent(novUnpaid)).toEqual(["2026-11-15"]);
+    const decUnpaid = markUnpaid(novUnpaid, dec.id);
+    expect(openRent(decUnpaid)).toHaveLength(1);
+  });
+
+  it("paying again after a later Bill was already paid brings in the period after the latest, never a copy", () => {
+    // Nov and Dec paid, Jan open; Nov marked unpaid (Jan goes), then paid again
+    const afterNov = markPaid([rent], "r1", "2026-11-14").bills;
+    const afterDec = markPaid(afterNov, afterNov[1].id, "2026-12-14").bills;
+    const repaid = markPaid(markUnpaid(afterDec, "r1"), "r1", "2026-12-20").bills;
+    expect(openRent(repaid)).toEqual(["2027-01-15"]);
+    const ids = repaid.map((b) => b.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("marking a paid Repeating bill unpaid again takes back the next Bill it brought in", () => {
+    const paid = markPaid([rent], "r1", "2026-11-14").bills;
+    const unpaid = markUnpaid(paid, "r1");
+    expect(unpaid).toEqual([rent]);
+  });
+});
+
+describe("Repeating bills: the Estimated amount", () => {
+  const next = bill({ id: "r2", amount: 400, howOften: "monthly", seriesId: "r1", estimated: true });
+
+  it("changing it sets the new amount and it is no longer an estimate", () => {
+    const [changed] = confirmAmount([next], "r2", 415.5);
+    expect(changed.amount).toBe(415.5);
+    expect(changed).not.toHaveProperty("estimated");
+  });
+
+  it("keeping it leaves the amount and it is no longer an estimate", () => {
+    const [kept] = confirmAmount([next], "r2", 400);
+    expect(kept).toEqual(bill({ id: "r2", amount: 400, howOften: "monthly", seriesId: "r1" }));
+  });
+
+  it("leaves every other Bill alone", () => {
+    const other = bill({ id: "x", estimated: true });
+    expect(confirmAmount([next, other], "r2", 1)[1]).toBe(other);
+  });
+});
+
+describe("Editing a Bill", () => {
+  const details = {
+    name: "Power",
+    amount: 120,
+    dueDate: "2026-11-20",
+    category: "electricity" as const,
+    howOften: "once" as const,
+  };
+
+  it("changes name, amount, due date and category of that Bill only", () => {
+    const others = [bill({ id: "a" }), bill({ id: "c", name: "Rent" })];
+    const bills = [others[0], bill({ id: "b" }), others[1]];
+    const edited = editBill(bills, "b", { ...details, category: "water" });
+    expect(edited).toEqual([
+      others[0],
+      { id: "b", name: "Power", amount: 120, dueDate: "2026-11-20", paid: false, category: "water" },
+      others[1],
+    ]);
+    // Untouched Bills are the very same objects
+    expect(edited[0]).toBe(others[0]);
+    expect(edited[2]).toBe(others[1]);
+  });
+
+  it("leaves the list it was given alone", () => {
+    const existing = [bill({ id: "a" })];
+    editBill(existing, "a", details);
+    expect(existing).toEqual([bill({ id: "a" })]);
+  });
+
+  it("changes nothing when no Bill has that id", () => {
+    const bills = [bill({ id: "a" })];
+    expect(editBill(bills, "missing", details)).toEqual(bills);
+  });
+
+  it("saving an Estimated amount, changed or not, confirms it", () => {
+    const next = bill({ id: "r2", amount: 400, howOften: "monthly", seriesId: "r1", dueDay: 8, estimated: true });
+    const same = billDetails(next);
+    const [kept] = editBill([next], "r2", same);
+    expect(kept).not.toHaveProperty("estimated");
+    expect(kept.amount).toBe(400);
+    const [changed] = editBill([next], "r2", { ...same, amount: 415 });
+    expect(changed).not.toHaveProperty("estimated");
+    expect(changed.amount).toBe(415);
+  });
+
+  it("Just once to repeating starts a series of its own", () => {
+    const [edited] = editBill([bill({ id: "a" })], "a", { ...details, howOften: "monthly" });
+    expect(edited).toMatchObject({ howOften: "monthly", seriesId: "a", dueDay: 20 });
+    // Marking it paid now brings in the next one
+    const { bills } = markPaid([edited], "a", "2026-11-20");
+    expect(bills.map((b) => b.dueDate)).toEqual(["2026-11-20", "2026-12-20"]);
+  });
+
+  it("repeating to Just once leaves the series, so no next Bill appears", () => {
+    const paidEarlier = bill({ id: "r1", paid: true, paidDate: "2026-10-08", dueDate: "2026-10-08", howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    const open = bill({ id: "r2", howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    const edited = editBill([paidEarlier, open], "r2", { ...details, howOften: "once" });
+    expect(edited[1]).toEqual({ id: "r2", name: "Power", amount: 120, dueDate: "2026-11-20", paid: false, category: "electricity" });
+    expect(edited[0]).toBe(paidEarlier);
+    expect(markPaid(edited, "r2", "2026-11-20").bills).toHaveLength(2);
+    // Un-paying the old one no longer removes the Bill that left the series
+    expect(markUnpaid(edited, "r1").map((b) => b.id)).toEqual(["r1", "r2"]);
+  });
+
+  it("a first Bill that left its series and comes back starts a new one, so the old series keeps one open Bill", () => {
+    const monthly = { howOften: "monthly" as const, seriesId: "r1", dueDay: 8 };
+    let bills = [
+      bill({ id: "r1", dueDate: "2026-09-08", ...monthly }),
+      bill({ id: "n1", dueDate: "2026-10-08", paid: true, paidDate: "2026-10-08", ...monthly }),
+    ];
+    const r1 = { name: "Electricity", amount: 100, dueDate: "2026-09-08", category: "electricity" as const };
+    bills = editBill(bills, "r1", { ...r1, howOften: "once" });
+    bills = markUnpaid(bills, "n1");
+    bills = editBill(bills, "r1", { ...r1, howOften: "monthly" });
+    const back = bills.find((b) => b.id === "r1")!;
+    expect(back.seriesId).not.toBe("r1");
+    // Every series still has at most one open Bill
+    const openBySeries = new Map<string, number>();
+    for (const b of bills.filter((b) => !b.paid && b.seriesId)) {
+      openBySeries.set(b.seriesId!, (openBySeries.get(b.seriesId!) ?? 0) + 1);
+    }
+    expect(Math.max(...openBySeries.values())).toBe(1);
+  });
+
+  it("the Bill's details, ready to edit, round-trip without changing it", () => {
+    const open = bill({ id: "r2", amount: 400, howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    expect(billDetails(open)).toEqual({ name: "Electricity", amount: 400, dueDate: "2026-11-08", category: "electricity", howOften: "monthly" });
+    expect(billDetails(bill())).toMatchObject({ howOften: "once" });
+    expect(editBill([open], "r2", billDetails(open))).toEqual([open]);
+  });
+
+  it("changing between repeating choices keeps the series", () => {
+    const open = bill({ id: "r2", howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    const [edited] = editBill([open], "r2", { ...details, dueDate: open.dueDate, howOften: "yearly" });
+    expect(edited).toMatchObject({ howOften: "yearly", seriesId: "r1", dueDay: 8 });
+  });
+
+  it("a new due date on a Repeating bill moves the series to that day of the month", () => {
+    const open = bill({ id: "r2", howOften: "monthly", seriesId: "r1", dueDay: 8 });
+    const [edited] = editBill([open], "r2", { ...details, howOften: "monthly" });
+    expect(edited.dueDay).toBe(20);
+  });
+
+  it("keeping the due date keeps the series day, even in a short month", () => {
+    // Due on the 31st, clamped to 28 Feb: it should still go back to the 31st
+    const open = bill({ id: "r2", dueDate: "2027-02-28", howOften: "monthly", seriesId: "r1", dueDay: 31 });
+    const [edited] = editBill([open], "r2", { ...details, dueDate: "2027-02-28", howOften: "monthly" });
+    expect(edited.dueDay).toBe(31);
   });
 });
