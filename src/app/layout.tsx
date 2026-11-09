@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { BottomBar } from "@/components/BottomBar";
 import { HelpButton } from "@/components/HelpButton";
-import { SavedTheme } from "@/components/SavedTheme";
+import { SavedSettings } from "@/components/SavedSettings";
+import { EARLY_SETTINGS_SCRIPT } from "@/lib/earlySettings";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,10 +31,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // The script below adds the saved settings before React loads; keep them
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          // Runs from the server's HTML; on the client React just skips it
+          type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: EARLY_SETTINGS_SCRIPT }}
+        />
+      </head>
       {/* Room at the bottom so the bottom bar never covers the end of a page */}
       <body className="min-h-full flex flex-col bg-[var(--bg-page)] pb-[calc(6rem+env(safe-area-inset-bottom))] print:pb-0">
-        <SavedTheme />
+        <SavedSettings />
         <HelpButton />
         {children}
         <BottomBar />

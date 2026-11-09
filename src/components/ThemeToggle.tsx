@@ -29,7 +29,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="mb-6">
+    <div>
       <button
         onClick={toggleTheme}
         className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-medium rounded-xl px-5 py-3 shadow-md hover:shadow-lg transition-all"
