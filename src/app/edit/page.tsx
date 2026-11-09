@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Bill } from "@/types/bill";
@@ -13,18 +12,19 @@ import {
   type NewBill,
 } from "@/lib/bills";
 import { BillForm } from "@/components/BillForm";
+import { useSaved, type SavedStorage } from "@/lib/savedValue";
+
+/** The unpaid Bill named by "?id=" in the address, or null if there is none. */
+function loadBillToEdit(storage: SavedStorage): Bill | null {
+  const id = new URLSearchParams(window.location.search).get("id");
+  return loadBills(storage).find((b) => b.id === id && !b.paid) ?? null;
+}
 
 /** Edit a bill: the same calm page as Add a bill, filled in with the Bill. */
 export default function EditBillPage() {
   const router = useRouter();
   // undefined while reading storage; null when there is no such unpaid Bill
-  const [bill, setBill] = useState<Bill | null | undefined>(undefined);
-
-  useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("id");
-    const found = loadBills(localStorage).find((b) => b.id === id && !b.paid);
-    setBill(found ?? null);
-  }, []);
+  const bill = useSaved<Bill | null | undefined>(loadBillToEdit, undefined);
 
   function handleSave(details: NewBill) {
     if (!bill) return;

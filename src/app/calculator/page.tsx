@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Bill } from "@/types/bill";
+import { useSaved } from "@/lib/savedValue";
 import { loadBills, unpaidBills } from "@/lib/bills";
 
 type Operator = "+" | "−" | "×" | "÷";
@@ -58,6 +59,9 @@ function Key({
   );
 }
 
+/** Before saved Bills are read: the server, and the first draw in the browser. */
+const NO_BILLS: Bill[] = [];
+
 export default function CalculatorPage() {
   const [display, setDisplay] = useState("0");
   const [stored, setStored] = useState<number | null>(null);
@@ -66,12 +70,8 @@ export default function CalculatorPage() {
   const [note, setNote] = useState("");
 
   // Bills come from the same saved list the main page uses
-  const [bills, setBills] = useState<Bill[]>([]);
+  const bills = useSaved(loadBills, NO_BILLS);
   const [tickedIds, setTickedIds] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    setBills(loadBills(localStorage));
-  }, []);
 
   // Only bills not yet paid are shown, as those are the ones to add up
   const unpaid = unpaidBills(bills);

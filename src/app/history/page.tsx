@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Bill } from "@/types/bill";
+import { useSaved } from "@/lib/savedValue";
 import {
   FULL_DATE,
   financialYear,
@@ -15,17 +16,16 @@ import {
 } from "@/lib/bills";
 import { BillIcon } from "@/components/BillIcon";
 
+/** Before saved Bills are read: the server, and the first draw in the browser. */
+const NO_BILLS: Bill[] = [];
+
 export default function HistoryPage() {
-  const [bills, setBills] = useState<Bill[]>([]);
+  const bills = useSaved(loadBills, NO_BILLS);
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
   const [activePreset, setActivePreset] = useState<
     "thisFY" | "lastFY" | "custom"
   >("thisFY");
-
-  useEffect(() => {
-    setBills(loadBills(localStorage));
-  }, []);
 
   function applyPreset(preset: "thisFY" | "lastFY") {
     const offset = preset === "thisFY" ? 0 : -1;
