@@ -1,4 +1,4 @@
-# My Bills
+# My Bills AU
 
 A simple bill tracker for older adults that answers one question first: "Do I need to pay anything soon?" It is built for people with memory loss, people new to technology, and people who feel anxious or stressed using it. Technical notes live in `src/docs/project-overview.md`.
 
@@ -16,9 +16,13 @@ _Avoid_: Carer, admin, guardian
 
 ### Bills
 
+**My Bills AU**:
+The app's name, shown under the home screen icon, on the browser tab and when installing. "AU" tells the Person it is an Australian app.
+_Avoid_: Bill Toolkit, Seniors Bill Tracker, My Bills (as the app's name)
+
 **My Bills**:
-The app's one name, used on the home screen icon, the browser tab and the main screen heading.
-_Avoid_: Bill Toolkit, Seniors Bill Tracker
+The main screen, which lists the Person's unpaid Bills and answers "Do I need to pay anything soon?". It is also the name of its bottom bar button. Not the app's name.
+_Avoid_: Home, dashboard
 
 **Bill**:
 A single amount the Person needs to pay by a due date, such as one electricity bill.
@@ -67,7 +71,7 @@ The one place for set-up choices a Person rarely changes, such as text size, col
 _Avoid_: Preferences, options, config
 
 **Colour theme**:
-The set of colours picked in Settings: Warm Cream, Blue or High contrast. It is separate from Dark mode.
+The set of colours picked in Settings: Blue (the one the app starts on, and the icon's colour), Warm Cream or High contrast. It is separate from Dark mode.
 _Avoid_: Skin, palette, colour scheme
 
 **Dark mode**:
