@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Bill } from "@/types/bill";
 import { billStatus, billsDueOn, toLocalDate, todayLocal } from "@/lib/bills";
 import {
@@ -13,12 +13,16 @@ import {
 
 export function CalendarView({
   bills,
+  month: currentMonth,
+  onChangeMonth,
   onSelectDay,
 }: {
   bills: Bill[];
+  /** The month shown (any day in it). */
+  month: Date;
+  onChangeMonth: (month: Date) => void;
   onSelectDay: (dayBills: Bill[]) => void;
 }) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const monthLabel = currentMonth.toLocaleDateString("en-AU", {
     month: "long",
@@ -66,14 +70,17 @@ export function CalendarView({
   }
 
   function changeMonth(offset: number) {
-    setCurrentMonth(
+    onChangeMonth(
       new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1),
     );
   }
 
   return (
-    <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-4 sm:p-6 mb-6">
-      <div className="flex items-center justify-between mb-4">
+    <div
+      id="calendar"
+      className="scroll-mt-4 bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md px-0 py-4 sm:p-6 mb-6"
+    >
+      <div className="flex items-center justify-between mb-4 px-1 sm:px-0">
         <button
           onClick={() => changeMonth(-1)}
           className="p-2 rounded-full hover:bg-[var(--calendar-hover-bg)]"
@@ -81,7 +88,7 @@ export function CalendarView({
         >
           <ChevronLeft className="w-6 h-6 text-[var(--accent-text)]" />
         </button>
-        <h2 className="text-xl font-semibold text-[var(--text-primary)]">
+        <h2 className="text-2xl font-semibold text-[var(--text-primary)]">
           {monthLabel}
         </h2>
         <button
@@ -93,7 +100,7 @@ export function CalendarView({
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 text-center text-sm text-[var(--text-secondary)] mb-2">
+      <div className="grid grid-cols-7 sm:gap-2 text-center text-lg text-[var(--text-secondary)] mb-2">
         <div>Sun</div>
         <div>Mon</div>
         <div>Tue</div>
@@ -103,7 +110,7 @@ export function CalendarView({
         <div>Sat</div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 sm:gap-2">
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-2">
         {days.map((date, i) => {
           if (!date) return <div key={i} />;
           const dayBills = billsOnDay(date);
@@ -121,7 +128,7 @@ export function CalendarView({
                   ? `${date.getDate()}: ${dayBills.map((b) => b.name).join(", ")}`
                   : `${date.getDate()}, no bills`
               }
-              className={`aspect-square rounded-xl flex flex-col items-center justify-center p-0.5 ${
+              className={`min-h-[4.5rem] rounded-xl flex flex-col items-center justify-start pt-1 pb-1.5 ${
                 isToday(date)
                   ? "border-4 border-[var(--calendar-today-border)]"
                   : status === "overdue"
@@ -129,7 +136,7 @@ export function CalendarView({
                     : "border-2 border-[var(--border-default)]"
               } ${status === "overdue" ? "bg-[var(--status-overdue-bg)]" : ""} ${clickable ? "cursor-pointer hover:bg-[var(--calendar-hover-bg)]" : "cursor-default"}`}
             >
-              <span className="text-sm text-[var(--text-primary)]">
+              <span className="text-2xl font-bold leading-tight text-[var(--text-primary)]">
                 {date.getDate()}
               </span>
               {status && (
@@ -142,7 +149,7 @@ export function CalendarView({
         })}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 text-[var(--text-secondary)]">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 px-1 sm:px-0 text-lg text-[var(--text-secondary)]">
         <span className="flex items-center gap-1">
           <AlertCircle className="w-5 h-5 text-[var(--status-overdue-text)]" /> Overdue
         </span>
