@@ -93,7 +93,7 @@ export default function HelpPage() {
           "Tap the numbers, then tap + − × or ÷, then tap the next number.",
           "Tap = to see the answer.",
           "Tap Clear to start again, or Delete to remove the last number you typed.",
-          "To add up bills, scroll down and tick the bills you want.",
+          "To add up bills, tap Add up your unpaid bills under the keys, then tick the bills you want.",
           "Tap Use this total to put the amount on the calculator screen.",
         ]}
       />

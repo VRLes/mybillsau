@@ -17,7 +17,7 @@ export function HelpButton() {
       <Link
         href={helpHref(pathname)}
         aria-current={pathname === "/help" ? "page" : undefined}
-        className="inline-flex items-center gap-2 bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-semibold rounded-full px-5 py-2 min-h-12 shadow-md hover:shadow-lg transition-all"
+        className="relative z-10 inline-flex items-center gap-2 bg-[var(--bg-card)] border-2 border-[var(--border-default)] text-[var(--text-primary)] text-lg font-semibold rounded-full px-5 py-2 min-h-12 shadow-md hover:shadow-lg transition-all"
       >
         <CircleHelp aria-hidden="true" className="size-6" />
         Help
