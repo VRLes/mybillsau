@@ -229,7 +229,7 @@ export default function CalculatorPage() {
 
       {/* The screen. The small line shows the sum in progress, so nothing has to be remembered.
           A message (like dividing by zero) takes that line's place, so no extra row is needed. */}
-      <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md px-4 py-(--calc-screen-pad) mb-(--calc-screen-gap) text-right">
+      <div className="bg-[var(--bg-card)] border-[var(--border-default)] rounded-2xl shadow-md px-4 py-(--calc-screen-pad) border-(length:--calc-screen-border) mb-(--calc-screen-gap) text-right">
         {/* Screen readers hear only the message, not every sum in progress */}
         <p role="status" className="sr-only">
           {note}
@@ -287,7 +287,7 @@ export default function CalculatorPage() {
       {/* Always shown, so the Person knows the bills are down there (even if there are none) */}
       <button
         onClick={goToBills}
-        className="mt-(--calc-button-gap) mb-(--calc-end-gap) w-full h-(--calc-button) rounded-xl text-[length:var(--calc-button-text,1.25rem)] font-semibold shadow-md bg-[var(--bg-card)] border-2 border-[var(--accent-button-bg)] text-[var(--accent-text)] active:scale-95 transition-all"
+        className="mt-(--calc-bills-button-gap) mb-(--calc-end-gap) w-full h-(--calc-bills-button) rounded-xl text-[length:var(--calc-bills-button-text,1.25rem)] font-semibold shadow-md bg-[var(--bg-card)] border-2 border-[var(--accent-button-bg)] text-[var(--accent-text)] active:scale-95 transition-transform"
       >
         <span aria-hidden="true">↓ </span>Add up your unpaid bills
       </button>
