@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { currentTab, helpHref } from "./nav";
 
 describe("currentTab: which bottom bar button is lit up", () => {
-  it("lights My Bills on the main screen and on Add a bill", () => {
+  it("lights My Bills on the main screen, Add a bill and Edit bill", () => {
     expect(currentTab("/")).toBe("my-bills");
     expect(currentTab("/add")).toBe("my-bills");
+    expect(currentTab("/edit")).toBe("my-bills");
   });
 
   it("lights Paid Bills on the Paid Bills page", () => {

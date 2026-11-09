@@ -160,32 +160,35 @@ function BillCard({
             <EstimatedAmount bill={bill} onConfirmAmount={onConfirmAmount} />
           )}
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-[var(--text-primary)]">
-            {estimated && <span className="text-lg font-semibold">about </span>}
-            ${bill.amount.toFixed(2)}
-          </p>
-          <button
-            onClick={() => onTogglePaid(bill.id)}
-            className="text-[var(--accent-text)] font-semibold underline"
-          >
-            {bill.paid ? "Paid" : "Mark as Paid"}
-          </button>
-          {!bill.paid && (
-            <Link
-              href={`/edit?id=${encodeURIComponent(bill.id)}`}
-              className="block mt-2 ml-auto text-[var(--accent-text)] font-semibold underline"
-            >
-              Edit
-            </Link>
+        <p className="shrink-0 text-right text-2xl font-bold text-[var(--text-primary)]">
+          {estimated && (
+            <span className="block text-lg font-semibold">about</span>
           )}
-          <button
-            onClick={() => onDelete(bill.id)}
-            className="block mt-2 ml-auto text-[var(--text-primary)] underline"
+          ${bill.amount.toFixed(2)}
+        </p>
+      </div>
+      {/* The actions get their own row, so nothing is squeezed on a phone */}
+      <div className="mt-4 pt-2 border-t-2 border-[var(--border-default)] flex flex-wrap justify-end gap-x-6">
+        <button
+          onClick={() => onTogglePaid(bill.id)}
+          className="py-2 text-[var(--accent-text)] font-semibold underline"
+        >
+          {bill.paid ? "Paid" : "Mark as Paid"}
+        </button>
+        {!bill.paid && (
+          <Link
+            href={`/edit?id=${encodeURIComponent(bill.id)}`}
+            className="py-2 text-[var(--accent-text)] font-semibold underline"
           >
-            Delete
-          </button>
-        </div>
+            Edit
+          </Link>
+        )}
+        <button
+          onClick={() => onDelete(bill.id)}
+          className="py-2 text-[var(--text-primary)] underline"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
