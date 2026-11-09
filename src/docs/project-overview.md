@@ -63,6 +63,8 @@ src/
 | `BillGroups` | Bills grouped Overdue / Due today / Due in the next 7 days / Later / Paid |
 | `CalendarView` | Visual calendar of bill due dates |
 | `ThemeToggle` | Dark/light mode switch |
+| `Settings` | Settings section at the bottom of My Bills: Text size, colour theme, dark mode, home screen guide |
+| `SavedSettings` | Puts the saved Text size, colour theme and dark mode back on, on every page |
 
 ---
 
@@ -74,7 +76,7 @@ src/
 - Calendar view — click a day to highlight bills due that day
 - Mark as Paid — saves the paid date, with Undo; the Bill moves to Paid Bills
 - Delete bill — confirms before deleting
-- Dark/light theme via ThemeToggle
+- Settings at the bottom of My Bills: Text size (Normal / Large / Extra large, default Large, remembered), colour theme, dark mode, and the home screen guide
 
 ---
 

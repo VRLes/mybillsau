@@ -45,6 +45,21 @@
   --status-overdue-text: #f2c879;
 }
 
+/*
+ * Text size. Every size in the app is in rem, so this one setting grows text,
+ * buttons and spacing together. Large is the default with no attribute set,
+ * so a first-time visitor sees Large straight away, with no jump.
+ */
+html {
+  font-size: 112.5%;
+}
+html[data-text-size="normal"] {
+  font-size: 100%;
+}
+html[data-text-size="extra-large"] {
+  font-size: 125%;
+}
+
 body {
   background: var(--bg-page);
   color: var(--text-primary);

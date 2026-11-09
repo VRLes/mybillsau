@@ -16,9 +16,7 @@ import {
 import { TodayAnswer } from "@/components/TodayAnswer";
 import { BillGroups } from "@/components/BillGroups";
 import { CalendarView } from "@/components/CalendarView";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { ColorThemeToggle } from "@/components/ColorThemeToggle";
-import { HomeScreenPill } from "@/components/HomeScreenPill";
+import { Settings } from "@/components/Settings";
 import { UndoMessage } from "@/components/UndoMessage";
 import { DeleteQuestion } from "@/components/DeleteQuestion";
 import Link from "next/link";
@@ -182,9 +180,6 @@ export default function Home() {
         <CalendarView bills={bills} onSelectDay={handleSelectDay} />
       )}
 
-
-      <HomeScreenPill />
-
       <UndoMessage shown={undo !== null} onUndo={handleUndo} />
 
       <DeleteQuestion
@@ -193,10 +188,7 @@ export default function Home() {
         onNo={() => setAskingToDelete(null)}
       />
 
-      <div className="flex flex-wrap gap-3 mb-6">
-        <ThemeToggle />
-        <ColorThemeToggle />
-      </div>
+      <Settings />
     </main>
   );
 }
