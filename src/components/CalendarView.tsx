@@ -59,10 +59,10 @@ export function CalendarView({
 
   function StatusIcon({ status }: { status: "overdue" | "due" | "paid" }) {
     if (status === "overdue")
-      return <AlertCircle className="w-3.5 h-3.5 text-[var(--status-overdue-border)]" />;
+      return <AlertCircle className="w-5 h-5 text-[var(--status-overdue-text)]" />;
     if (status === "due")
-      return <Clock className="w-3.5 h-3.5 text-[var(--accent-text)]" />;
-    return <Check className="w-3.5 h-3.5 text-[var(--calendar-paid-dot)]" />;
+      return <Clock className="w-5 h-5 text-[var(--accent-text)]" />;
+    return <Check className="w-5 h-5 text-[var(--calendar-paid-dot)]" />;
   }
 
   function changeMonth(offset: number) {
@@ -72,7 +72,7 @@ export function CalendarView({
   }
 
   return (
-    <div className="bg-[var(--bg-card)] rounded-2xl shadow-md p-6 mb-6">
+    <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-4 sm:p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => changeMonth(-1)}
@@ -103,7 +103,7 @@ export function CalendarView({
         <div>Sat</div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {days.map((date, i) => {
           if (!date) return <div key={i} />;
           const dayBills = billsOnDay(date);
@@ -121,11 +121,13 @@ export function CalendarView({
                   ? `${date.getDate()}: ${dayBills.map((b) => b.name).join(", ")}`
                   : `${date.getDate()}, no bills`
               }
-              className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-center p-1 ${
+              className={`aspect-square rounded-xl flex flex-col items-center justify-center p-0.5 ${
                 isToday(date)
-                  ? "border-[var(--calendar-today-border)]"
-                  : "border-[var(--border-default)]"
-              } ${clickable ? "cursor-pointer hover:bg-[var(--calendar-hover-bg)]" : "cursor-default"}`}
+                  ? "border-4 border-[var(--calendar-today-border)]"
+                  : status === "overdue"
+                    ? "border-2 border-[var(--status-overdue-border)]"
+                    : "border-2 border-[var(--border-default)]"
+              } ${status === "overdue" ? "bg-[var(--status-overdue-bg)]" : ""} ${clickable ? "cursor-pointer hover:bg-[var(--calendar-hover-bg)]" : "cursor-default"}`}
             >
               <span className="text-sm text-[var(--text-primary)]">
                 {date.getDate()}
@@ -140,15 +142,15 @@ export function CalendarView({
         })}
       </div>
 
-      <div className="flex items-center gap-4 mt-4 text-sm text-[var(--text-secondary)]">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-4 text-[var(--text-secondary)]">
         <span className="flex items-center gap-1">
-          <AlertCircle className="w-3.5 h-3.5 text-[var(--status-overdue-border)]" /> Overdue
+          <AlertCircle className="w-5 h-5 text-[var(--status-overdue-text)]" /> Overdue
         </span>
         <span className="flex items-center gap-1">
-          <Clock className="w-3.5 h-3.5 text-[var(--accent-text)]" /> Due
+          <Clock className="w-5 h-5 text-[var(--accent-text)]" /> Due
         </span>
         <span className="flex items-center gap-1">
-          <Check className="w-3.5 h-3.5 text-[var(--calendar-paid-dot)]" /> Paid
+          <Check className="w-5 h-5 text-[var(--calendar-paid-dot)]" /> Paid
         </span>
       </div>
     </div>

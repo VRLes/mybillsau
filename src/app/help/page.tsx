@@ -38,7 +38,7 @@ function Topic({
   return (
     <section
       id={id}
-      className="bg-[var(--bg-card)] rounded-2xl shadow-md p-6 mb-6 scroll-mt-4 target:ring-4 target:ring-[var(--accent-button-bg)]"
+      className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-6 mb-6 scroll-mt-4 target:ring-4 target:ring-[var(--accent-button-bg)]"
     >
       <h2 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">
         {title}
@@ -66,7 +66,7 @@ export default function HelpPage() {
         id="calendar"
         title="The calendar"
         steps={[
-          "Today's date has a green outline around it.",
+          "Today's date has a thick outline around it.",
           "A circle with an exclamation mark means a bill is overdue.",
           "A clock means a bill is due soon.",
           "A tick means a bill has been paid.",

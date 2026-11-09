@@ -142,7 +142,7 @@ export default function Home() {
       </h1>
 
       {loaded && bills.length === 0 && (
-        <div className="bg-[var(--bg-card)] rounded-2xl shadow-md p-6 mb-4 text-center">
+        <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-6 mb-4 text-center">
           <p className="text-2xl font-semibold text-[var(--text-primary)]">
             No bills yet
           </p>
@@ -154,7 +154,7 @@ export default function Home() {
 
       <Link
         href="/add"
-        className="block w-full text-center bg-[var(--accent-button-bg)] text-white text-2xl font-semibold rounded-2xl py-5 mb-8 shadow-md hover:bg-[var(--accent-button-hover)] hover:shadow-lg transition-all"
+        className="block w-full text-center bg-[var(--accent-button-bg)] text-[var(--on-accent)] text-2xl font-semibold rounded-2xl py-5 mb-8 shadow-md hover:bg-[var(--accent-button-hover)] hover:shadow-lg transition-all"
       >
         + Add a bill
       </Link>

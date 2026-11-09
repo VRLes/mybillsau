@@ -12,6 +12,10 @@ import {
   type LocalDate,
 } from "@/lib/bills";
 import { BillIcon } from "@/components/BillIcon";
+import { AlertCircle, Clock } from "lucide-react";
+
+/** A status said in words on the Bill card itself, not just in the heading. */
+type CardStatus = "overdue" | "due-today" | null;
 
 interface BillActions {
   highlightedIds: Set<string>;
@@ -36,11 +40,25 @@ export function BillGroups({
 }) {
   return (
     <div className="space-y-8">
-      <Group title="Overdue" bills={summary.overdue} overdue {...actions}>
+      <Group
+        title="Overdue"
+        bills={summary.overdue}
+        status="overdue"
+        {...actions}
+      >
         Pay when you can, then tap Mark as Paid.
       </Group>
-      <Group title="Due today" bills={summary.dueToday} {...actions} />
-      <Group title="Due in the next 7 days" bills={summary.dueSoon} {...actions}>
+      <Group
+        title="Due today"
+        bills={summary.dueToday}
+        status="due-today"
+        {...actions}
+      />
+      <Group
+        title="Due in the next 7 days"
+        bills={summary.dueSoon}
+        {...actions}
+      >
         Due by {formatLocalDate(dueSoonUntil(today), DAY_DATE)}
       </Group>
       <Group title="Later" bills={summary.later} {...actions} />
@@ -52,13 +70,13 @@ export function BillGroups({
 function Group({
   title,
   bills,
-  overdue = false,
+  status = null,
   children,
   ...actions
 }: BillActions & {
   title: string;
   bills: Bill[];
-  overdue?: boolean;
+  status?: CardStatus;
   children?: ReactNode;
 }) {
   if (bills.length === 0) return null;
@@ -69,7 +87,7 @@ function Group({
       {children && (
         <p
           className={`text-lg mt-1 ${
-            overdue
+            status === "overdue"
               ? "font-semibold text-[var(--status-overdue-text)]"
               : "text-[var(--text-secondary)]"
           }`}
@@ -79,7 +97,7 @@ function Group({
       )}
       <div className="space-y-4 mt-3">
         {bills.map((bill) => (
-          <BillCard key={bill.id} bill={bill} overdue={overdue} {...actions} />
+          <BillCard key={bill.id} bill={bill} status={status} {...actions} />
         ))}
       </div>
     </section>
@@ -88,17 +106,21 @@ function Group({
 
 function BillCard({
   bill,
-  overdue,
+  status,
   highlightedIds,
   onTogglePaid,
   onDelete,
   onConfirmAmount,
-}: BillActions & { bill: Bill; overdue: boolean }) {
+}: BillActions & { bill: Bill; status: CardStatus }) {
   const schedule = howOften(bill);
   const estimated = isEstimated(bill);
-  const look = overdue
-    ? "bg-[var(--status-overdue-bg)] border-2 border-[var(--status-overdue-border)]"
-    : "bg-[var(--bg-card)]";
+  const look =
+    status === "overdue"
+      ? "bg-[var(--status-overdue-bg)] border-[3px] border-[var(--status-overdue-border)]"
+      : status === "due-today"
+        ? "bg-[var(--bg-card)] border-[3px] border-[var(--accent-button-bg)]"
+        : "bg-[var(--bg-card)] border-2 border-[var(--border-default)]";
+  const dueDate = formatLocalDate(bill.dueDate, DAY_DATE);
   const ring = highlightedIds.has(bill.id)
     ? "ring-4 ring-[var(--accent-button-bg)]"
     : "";
@@ -106,48 +128,64 @@ function BillCard({
   return (
     <div
       id={`bill-${bill.id}`}
-      className={`${look} ${ring} rounded-2xl shadow-md hover:shadow-lg transition-all p-5 flex items-center gap-4`}
+      className={`${look} ${ring} rounded-2xl shadow-md hover:shadow-lg transition-shadow p-5`}
     >
-      <BillIcon category={bill.category} />
-      <div className="flex-1 min-w-0">
-        <p className="text-xl font-semibold text-[var(--text-primary)]">
-          {bill.name}
+      {status === "overdue" && (
+        <p className="flex items-center gap-2 mb-3 text-lg font-bold text-[var(--status-overdue-text)]">
+          <AlertCircle aria-hidden="true" className="w-6 h-6 shrink-0" />
+          Overdue since {dueDate}
         </p>
-        <p className="text-[var(--text-secondary)]">
-          Due {formatLocalDate(bill.dueDate, DAY_DATE)}
-          {schedule !== "once" && ` · ${HOW_OFTEN_WORDS[schedule]}`}
+      )}
+      {status === "due-today" && (
+        <p className="flex items-center gap-2 mb-3 text-lg font-bold text-[var(--accent-text)]">
+          <Clock aria-hidden="true" className="w-6 h-6 shrink-0" />
+          Due today
         </p>
-        {estimated && (
-          <EstimatedAmount bill={bill} onConfirmAmount={onConfirmAmount} />
-        )}
-      </div>
-      <div className="text-right">
-        <p className="text-2xl font-bold text-[var(--text-primary)]">
-          {estimated && (
-            <span className="text-lg font-semibold">about </span>
+      )}
+      <div className="flex items-center gap-4">
+        <BillIcon category={bill.category} />
+        <div className="flex-1 min-w-0">
+          <p className="text-xl font-semibold text-[var(--text-primary)]">
+            {bill.name}
+          </p>
+          {status === null && (
+            <p className="text-[var(--text-secondary)]">Due {dueDate}</p>
           )}
-          ${bill.amount.toFixed(2)}
-        </p>
-        <button
-          onClick={() => onTogglePaid(bill.id)}
-          className="text-[var(--accent-text)] font-semibold underline"
-        >
-          {bill.paid ? "Paid" : "Mark as Paid"}
-        </button>
-        {!bill.paid && (
-          <Link
-            href={`/edit?id=${encodeURIComponent(bill.id)}`}
-            className="block mt-2 ml-auto text-[var(--accent-text)] font-semibold underline"
+          {schedule !== "once" && (
+            <p className="text-[var(--text-secondary)]">
+              {HOW_OFTEN_WORDS[schedule]}
+            </p>
+          )}
+          {estimated && (
+            <EstimatedAmount bill={bill} onConfirmAmount={onConfirmAmount} />
+          )}
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-bold text-[var(--text-primary)]">
+            {estimated && <span className="text-lg font-semibold">about </span>}
+            ${bill.amount.toFixed(2)}
+          </p>
+          <button
+            onClick={() => onTogglePaid(bill.id)}
+            className="text-[var(--accent-text)] font-semibold underline"
           >
-            Edit
-          </Link>
-        )}
-        <button
-          onClick={() => onDelete(bill.id)}
-          className="block mt-2 ml-auto text-sm text-red-500 hover:text-red-700"
-        >
-          Delete
-        </button>
+            {bill.paid ? "Paid" : "Mark as Paid"}
+          </button>
+          {!bill.paid && (
+            <Link
+              href={`/edit?id=${encodeURIComponent(bill.id)}`}
+              className="block mt-2 ml-auto text-[var(--accent-text)] font-semibold underline"
+            >
+              Edit
+            </Link>
+          )}
+          <button
+            onClick={() => onDelete(bill.id)}
+            className="block mt-2 ml-auto text-[var(--text-primary)] underline"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -209,7 +247,7 @@ function EstimatedAmount({
         <button
           type="submit"
           disabled={!amountOk}
-          className="bg-[var(--accent-button-bg)] text-white text-lg font-semibold rounded-xl px-5 py-3 min-h-12 disabled:opacity-50"
+          className="bg-[var(--accent-button-bg)] text-[var(--on-accent)] text-lg font-semibold rounded-xl px-5 py-3 min-h-12 disabled:opacity-50"
         >
           Save amount
         </button>

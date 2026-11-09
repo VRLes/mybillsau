@@ -1,48 +1,157 @@
 @import "tailwindcss";
 
-   :root {
-  --bg-page: #faf6ef;
-  --bg-card: #ffffff;
-  --text-primary: #3a2e22;
-  --text-secondary: #7a6a54;
-  --border-default: #e8dfcf;
-  --icon-bg: #f0e4d0;
-  --icon-text: #a6652e;
-  --accent-text: #a6652e;
-  --accent-button-bg: #a6652e;
-  --accent-button-hover: #8a5226;
-  --banner-ok-bg: #f0e4d0;
-  --banner-ok-border: #c99b5c;
-  --banner-ok-text: #8a5226;
-  --calendar-today-border: #a6652e;
-  --calendar-hover-bg: #f0e4d0;
-  --calendar-paid-dot: #a6652e;
-  /* Overdue is a calm amber in every colour theme, never red */
-  --status-overdue-bg: #fdf3e1;
-  --status-overdue-border: #e0a84a;
-  --status-overdue-text: #7a4a0e;
+/*
+ * Colour themes. Every pair is checked by src/app/colours.test.ts:
+ * text reaches 7:1 against its background, and outlines, icons and focus
+ * rings reach 3:1. Cards are a soft off-white, not pure white, to cut glare.
+ *
+ * Overdue is a calm amber in every Colour theme, never red. It is told apart
+ * by its yellow fill, dark outline, ⚠ icon and the word "Overdue", never by
+ * colour alone, so it stays clear with any kind of colour blindness.
+ */
+
+/* Warm Cream, light (the default) */
+:root {
+  --bg-page: #f2ebdf;
+  --bg-card: #fffdf8;
+  --text-primary: #2a2016;
+  --text-secondary: #4f4029;
+  --border-default: #8a7759;
+  --icon-bg: #efe2cc;
+  --icon-text: #6b4116;
+  --accent-text: #6b4116;
+  --accent-button-bg: #6b4116;
+  --accent-button-hover: #52300e;
+  --on-accent: #ffffff;
+  --banner-ok-bg: #efe2cc;
+  --banner-ok-border: #8a6a3c;
+  --banner-ok-text: #47290b;
+  --calendar-today-border: #6b4116;
+  --calendar-hover-bg: #efe2cc;
+  --calendar-paid-dot: #6b4116;
+  --focus-ring: #1d4f91;
+  --status-overdue-bg: #fff0c2;
+  --status-overdue-border: #8a5a00;
+  --status-overdue-text: #573800;
 }
 
+/* Warm Cream, dark */
 .dark {
-  --bg-page: #211a12;
-  --bg-card: #2e251a;
-  --text-primary: #f5ecdd;
-  --text-secondary: #c9b795;
-  --border-default: #4a3b28;
-  --icon-bg: #4a3b28;
-  --icon-text: #e0a96d;
-  --accent-text: #e0a96d;
-  --accent-button-bg: #b8803f;
-  --accent-button-hover: #cf9456;
-  --banner-ok-bg: #2e251a;
+  --bg-page: #1b150e;
+  --bg-card: #282016;
+  --text-primary: #f7efe2;
+  --text-secondary: #ddcdaf;
+  --border-default: #9a8461;
+  --icon-bg: #3b2f20;
+  --icon-text: #f0bd82;
+  --accent-text: #f2c28c;
+  --accent-button-bg: #f0bd82;
+  --accent-button-hover: #f7cfa1;
+  --on-accent: #1b150e;
+  --banner-ok-bg: #282016;
   --banner-ok-border: #b8803f;
-  --banner-ok-text: #c9b795;
-  --calendar-today-border: #e0a96d;
-  --calendar-hover-bg: #2e251a;
-  --calendar-paid-dot: #e0a96d;
-  --status-overdue-bg: #3a2a12;
-  --status-overdue-border: #b8862e;
-  --status-overdue-text: #f2c879;
+  --banner-ok-text: #ead9b9;
+  --calendar-today-border: #f0bd82;
+  --calendar-hover-bg: #3b2f20;
+  --calendar-paid-dot: #f0bd82;
+  --focus-ring: #ffd166;
+  --status-overdue-bg: #2f230a;
+  --status-overdue-border: #e8b04a;
+  --status-overdue-text: #ffd98f;
+}
+
+/* Blue, light */
+.theme-blue {
+  --bg-page: #e8f0f5;
+  --bg-card: #fbfdfe;
+  --text-primary: #13212a;
+  --text-secondary: #34454f;
+  --border-default: #637d8d;
+  --icon-bg: #dbe9f2;
+  --icon-text: #1a4e69;
+  --accent-text: #1a4e69;
+  --accent-button-bg: #1a4e69;
+  --accent-button-hover: #123a4f;
+  --on-accent: #ffffff;
+  --banner-ok-bg: #dbe9f2;
+  --banner-ok-border: #4f7f99;
+  --banner-ok-text: #11364a;
+  --calendar-today-border: #1a4e69;
+  --calendar-hover-bg: #dbe9f2;
+  --calendar-paid-dot: #1a4e69;
+  --focus-ring: #13212a;
+}
+
+/* Blue, dark */
+.theme-blue.dark {
+  --bg-page: #0e161b;
+  --bg-card: #17242b;
+  --text-primary: #eef5f8;
+  --text-secondary: #bcd5e0;
+  --border-default: #6f8f9e;
+  --icon-bg: #24363f;
+  --icon-text: #93d2ee;
+  --accent-text: #93d2ee;
+  --accent-button-bg: #93d2ee;
+  --accent-button-hover: #b0e0f5;
+  --on-accent: #0e161b;
+  --banner-ok-bg: #17242b;
+  --banner-ok-border: #5f9ab5;
+  --banner-ok-text: #d0e5ef;
+  --calendar-today-border: #93d2ee;
+  --calendar-hover-bg: #24363f;
+  --calendar-paid-dot: #93d2ee;
+  --focus-ring: #ffd166;
+}
+
+/* High contrast, light */
+.theme-high-contrast {
+  --bg-page: #f0f0f0;
+  --bg-card: #ffffff;
+  --text-primary: #000000;
+  --text-secondary: #1f1f1f;
+  --border-default: #000000;
+  --icon-bg: #ffffff;
+  --icon-text: #000000;
+  --accent-text: #002d73;
+  --accent-button-bg: #000000;
+  --accent-button-hover: #262626;
+  --on-accent: #ffffff;
+  --banner-ok-bg: #ffffff;
+  --banner-ok-border: #000000;
+  --banner-ok-text: #000000;
+  --calendar-today-border: #000000;
+  --calendar-hover-bg: #e0e0e0;
+  --calendar-paid-dot: #000000;
+  --focus-ring: #0047cc;
+  --status-overdue-bg: #ffeb99;
+  --status-overdue-border: #000000;
+  --status-overdue-text: #3d2600;
+}
+
+/* High contrast, dark */
+.theme-high-contrast.dark {
+  --bg-page: #000000;
+  --bg-card: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #f0f0f0;
+  --border-default: #ffffff;
+  --icon-bg: #000000;
+  --icon-text: #ffffff;
+  --accent-text: #ffe066;
+  --accent-button-bg: #ffe066;
+  --accent-button-hover: #fff0a8;
+  --on-accent: #000000;
+  --banner-ok-bg: #000000;
+  --banner-ok-border: #ffffff;
+  --banner-ok-text: #ffffff;
+  --calendar-today-border: #ffe066;
+  --calendar-hover-bg: #262626;
+  --calendar-paid-dot: #ffffff;
+  --focus-ring: #ffe066;
+  --status-overdue-bg: #2b2000;
+  --status-overdue-border: #ffd23f;
+  --status-overdue-text: #ffe28a;
 }
 
 /*
@@ -66,78 +175,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-.theme-green {
-  --bg-page: #f4faf6;
-  --bg-card: #ffffff;
-  --text-primary: #1f2e24;
-  --text-secondary: #5a6b60;
-  --border-default: #c8ded0;
-  --icon-bg: #e3f0e8;
-  --icon-text: #3e7a52;
-  --accent-text: #3e7a52;
-  --accent-button-bg: #3e7a52;
-  --accent-button-hover: #2e5d3e;
-  --banner-ok-bg: #e3f0e8;
-  --banner-ok-border: #6fa87f;
-  --banner-ok-text: #2e5d3e;
-  --calendar-today-border: #3e7a52;
-  --calendar-hover-bg: #e3f0e8;
-  --calendar-paid-dot: #3e7a52;
+/*
+ * A thick ring shows where keyboard focus is, on every button, link and box.
+ * It sits outside Tailwind's layers, so it wins over `outline-none`.
+ */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
 }
-
-  .theme-green.dark {
-  --bg-page: #121b15;
-  --bg-card: #1c2a20;
-  --text-primary: #edf5ef;
-  --text-secondary: #a8ccb5;
-  --border-default: #2e4035;
-  --icon-bg: #2e4035;
-  --icon-text: #7fc695;
-  --accent-text: #7fc695;
-  --accent-button-bg: #4c8a63;
-  --accent-button-hover: #5fa376;
-  --banner-ok-bg: #22301a;
-  --banner-ok-border: #4c8a63;
-  --banner-ok-text: #a8ccb5;
-  --calendar-today-border: #7fc695;
-  --calendar-hover-bg: #1c2a20;
-  --calendar-paid-dot: #7fc695;
-}
-
-.theme-blue {
-  --bg-page: #f3f8fb;
-  --bg-card: #ffffff;
-  --text-primary: #1e2b33;
-  --text-secondary: #5a6b72;
-  --border-default: #c6dce6;
-  --icon-bg: #e2eff6;
-  --icon-text: #2c6e8e;
-  --accent-text: #2c6e8e;
-  --accent-button-bg: #2c6e8e;
-  --accent-button-hover: #20566f;
-  --banner-ok-bg: #e2eff6;
-  --banner-ok-border: #6fa8c4;
-  --banner-ok-text: #20566f;
-  --calendar-today-border: #2c6e8e;
-  --calendar-hover-bg: #e2eff6;
-  --calendar-paid-dot: #2c6e8e;
-}
-
-.theme-blue.dark {
-  --bg-page: #121a1e;
-  --bg-card: #1c2a30;
-  --text-primary: #edf4f7;
-  --text-secondary: #a3c8d8;
-  --border-default: #2e4047;
-  --icon-bg: #2e4047;
-  --icon-text: #7fc0dd;
-  --accent-text: #7fc0dd;
-  --accent-button-bg: #4c8aa3;
-  --accent-button-hover: #5fa3b8;
-  --banner-ok-bg: #22301a0;
-  --banner-ok-border: #4c8aa3;
-  --banner-ok-text: #a3c8d8;
-  --calendar-today-border: #7fc0dd;
-  --calendar-hover-bg: #1c2a30;
-  --calendar-paid-dot: #7fc0dd;
-} 

@@ -47,7 +47,7 @@ export function DeleteQuestion({
       onClick={(e) => {
         if (e.target === e.currentTarget) onNo();
       }}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-[var(--bg-card)] p-0 shadow-lg backdrop:bg-black/50"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-[var(--bg-card)] border-2 border-[var(--border-default)] p-0 shadow-lg backdrop:bg-black/50"
     >
       {bill && (
         <div className="p-6">
@@ -64,7 +64,7 @@ export function DeleteQuestion({
             <button
               ref={keep}
               onClick={onNo}
-              className="w-full rounded-2xl bg-[var(--accent-button-bg)] py-4 text-2xl font-semibold text-white shadow-md hover:bg-[var(--accent-button-hover)]"
+              className="w-full rounded-2xl bg-[var(--accent-button-bg)] py-4 text-2xl font-semibold text-[var(--on-accent)] shadow-md hover:bg-[var(--accent-button-hover)]"
             >
               No, keep it
             </button>

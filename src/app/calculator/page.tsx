@@ -210,7 +210,7 @@ export default function CalculatorPage() {
       {/* The screen. The small line shows the sum in progress, so nothing has to be remembered */}
 
       
-      <div className="bg-[var(--bg-card)] rounded-2xl shadow-md p-5 mb-4 text-right">
+      <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-5 mb-4 text-right">
         <p className="text-[var(--text-secondary)] text-xl min-h-[1.75rem]">
           {stored !== null && op ? `${tidy(stored)} ${op}` : ""}
         </p>
@@ -265,7 +265,7 @@ export default function CalculatorPage() {
             {unpaid.map((bill) => (
               <label
                 key={bill.id}
-                className="bg-[var(--bg-card)] rounded-2xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
+                className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-4 flex items-center gap-4 cursor-pointer"
               >
                 <input
                   type="checkbox"
@@ -284,7 +284,7 @@ export default function CalculatorPage() {
           </div>
         )}
 
-        <div className="bg-[var(--bg-card)] rounded-2xl shadow-md p-5 mt-4">
+        <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md p-5 mt-4">
           <p className="text-xl font-semibold text-[var(--text-primary)]">
             Ticked bills total: ${tickedTotal.toFixed(2)}
           </p>

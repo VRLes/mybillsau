@@ -66,6 +66,18 @@ _Avoid_: History
 The one place for set-up choices a Person rarely changes, such as text size, colour theme, dark mode and saving the app to the home screen. Usually handled by a Helper.
 _Avoid_: Preferences, options, config
 
+**Colour theme**:
+The set of colours picked in Settings: Warm Cream, Blue or High contrast. It is separate from Dark mode.
+_Avoid_: Skin, palette, colour scheme
+
+**Dark mode**:
+Light text on a dark background. It can be on or off with any Colour theme.
+_Avoid_: Night mode
+
+**High contrast**:
+The Colour theme with the strongest difference between text and background, for a Person with low vision.
+_Avoid_: Accessible mode, vision mode
+
 **Handy tools**:
 The extras that live outside bill tracking: the Calculator and the Converter, grouped behind one button.
 _Avoid_: Toolkit, utilities, extras
