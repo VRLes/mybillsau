@@ -172,6 +172,64 @@ html[data-text-size="extra-large"] {
   font-size: 125%;
 }
 
+/*
+ * Calculator: the keys fit the screen height (#34).
+ * Every height on the calculator above the bill list is set here once, so the
+ * room worked out for the keys always matches what is drawn. Change a size
+ * here, not in the page.
+ */
+.calculator {
+  --calc-heading: 4rem; /* the same height as the Help row it sits beside */
+  --calc-heading-gap: 0.75rem;
+  --calc-screen-pad: 0.375rem;
+  --calc-screen-border: 2px;
+  --calc-sum-line: 1.75rem; /* the sum in progress, or a message */
+  --calc-number-line: 2.5rem;
+  --calc-screen-gap: 0.75rem;
+  --calc-key-gap: 0.75rem;
+  --calc-bills-button-gap: 0.75rem;
+  --calc-bills-button: 3.5rem;
+  --calc-end-gap: 0.75rem; /* a little space above the bottom bar */
+
+  /* What is left of the screen for the 5 rows of keys */
+  --calc-key-room: calc(
+    100dvh -
+      /* Until the bar has measured itself: its height with one line of words */
+      var(--bottom-bar-height, calc(5rem + 2px + env(safe-area-inset-bottom))) -
+      var(--calc-heading) - var(--calc-heading-gap) -
+      (2 * var(--calc-screen-pad) + 2 * var(--calc-screen-border) + var(--calc-sum-line) + var(--calc-number-line)) -
+      var(--calc-screen-gap) - 4 * var(--calc-key-gap) - var(--calc-bills-button-gap) -
+      var(--calc-bills-button) - var(--calc-end-gap)
+  );
+  /* Never taller than 4rem (how a tablet looks), never shorter than 48px */
+  --calc-key: clamp(48px, var(--calc-key-room) / 5, 4rem);
+}
+
+/*
+ * Short screens (phones): the heading, number screen and "Add up your unpaid
+ * bills" button stop growing past their Large size (Large is 18px a rem), so
+ * the keys keep their room. Gaps and padding are trimmed too.
+ */
+@media (max-height: 900px) and (max-width: 600px) {
+  .calculator {
+    /* The heading row stays the Help row's height, but Help's button ends where
+       that row ends, so a small gap is enough to clear it. */
+    --calc-heading-gap: 4px;
+    --calc-screen-pad: 4px;
+    --calc-sum-line: min(1.5rem, 27px);
+    --calc-number-line: min(2.5rem, 45px);
+    --calc-screen-gap: min(0.5rem, 9px);
+    --calc-key-gap: min(0.5rem, 9px);
+    --calc-bills-button-gap: min(0.5rem, 9px);
+    --calc-bills-button: min(3.5rem, 63px);
+    --calc-end-gap: 2px;
+    --calc-heading-text: min(1.875rem, 33.75px);
+    --calc-sum-text: min(1.25rem, 22.5px);
+    --calc-number-text: min(2.25rem, 40.5px);
+    --calc-bills-button-text: min(1.25rem, 22.5px);
+  }
+}
+
 body {
   background: var(--bg-page);
   color: var(--text-primary);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CircleCheckBig, House, Wrench, type LucideIcon } from "lucide-react";
@@ -18,8 +19,30 @@ const ICONS: Record<Tab, LucideIcon> = {
 export function BottomBar() {
   const active = currentTab(usePathname());
 
+  // Tells the page how tall the bar really is (its words wrap at bigger Text
+  // sizes, and the phone's safe area is added), as --bottom-bar-height.
+  // The Calculator uses it to fit its keypad above the bar.
+  const bar = useRef<HTMLElement>(null);
+  // A layout effect, so the first paint already has the right height
+  useLayoutEffect(() => {
+    const nav = bar.current;
+    if (!nav) return;
+    const root = document.documentElement;
+    const publish = () =>
+      root.style.setProperty("--bottom-bar-height", `${nav.offsetHeight}px`);
+    publish();
+    // And again whenever it changes, such as a new Text size or turning the phone
+    const observer = new ResizeObserver(publish);
+    observer.observe(nav, { box: "border-box" });
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--bottom-bar-height");
+    };
+  }, []);
+
   return (
     <nav
+      ref={bar}
       aria-label="Main"
       className="print:hidden fixed inset-x-0 bottom-0 z-40 bg-[var(--bg-card)] border-t-2 border-[var(--border-default)] shadow-[0_-2px_8px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]"
     >

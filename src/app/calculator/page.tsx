@@ -51,7 +51,9 @@ function Key({
     <button
       onClick={onPress}
       aria-label={ariaLabel ?? (typeof label === "string" ? label : undefined)}
-      className={`h-16 rounded-xl text-2xl font-semibold shadow-md active:scale-95 transition-all ${
+      // The key's height is worked out in globals.css (.calculator), so the keypad fits the
+      // screen. container-type:size lets the Delete key's icon shrink with a short key.
+      className={`h-(--calc-key) [container-type:size] rounded-xl text-2xl font-semibold shadow-md active:scale-95 transition-transform ${
         styles[style]
       } ${wide ? "col-span-2" : ""}`}
     >
@@ -216,42 +218,43 @@ export default function CalculatorPage() {
     // Pulled up by the Help row's height (-mt-16) so the heading sits beside
     // Help, which keeps its spot. This page only: the keypad must fit on phones.
     // (Help is hidden when printing, so the pull-up is too.)
-    <main className="min-h-screen bg-[var(--bg-page)] px-4 pb-4 sm:px-8 sm:pb-8 -mt-16 print:mt-0 max-w-md mx-auto w-full">
-      {/* h-16 (including pt-4) matches the Help row's height. w-fit so the heading never
+    <main className="calculator min-h-screen bg-[var(--bg-page)] px-4 pb-4 sm:px-8 sm:pb-8 -mt-16 print:mt-0 max-w-md mx-auto w-full">
+      {/* Its height (including pt-4) matches the Help row's. w-fit so the heading never
           covers the Help button. A size smaller than other pages' headings (text-4xl),
-          so it fits beside Help at Extra large text. */}
-      <h1 className="w-fit pt-4 h-16 flex items-center text-3xl font-bold mb-3 text-[var(--text-primary)]">
+          so it fits beside Help at Extra large text. All the heights on this calculator
+          are set in globals.css (.calculator), where the keys' height is worked out. */}
+      <h1 className="w-fit pt-4 h-(--calc-heading) mb-(--calc-heading-gap) flex items-center text-[length:var(--calc-heading-text,1.875rem)] font-bold text-[var(--text-primary)]">
         Calculator
       </h1>
 
       {/* The screen. The small line shows the sum in progress, so nothing has to be remembered.
           A message (like dividing by zero) takes that line's place, so no extra row is needed. */}
-      <div className="bg-[var(--bg-card)] border-2 border-[var(--border-default)] rounded-2xl shadow-md px-4 py-3 mb-3 text-right">
+      <div className="bg-[var(--bg-card)] border-[var(--border-default)] rounded-2xl shadow-md px-4 py-(--calc-screen-pad) border-(length:--calc-screen-border) mb-(--calc-screen-gap) text-right">
         {/* Screen readers hear only the message, not every sum in progress */}
         <p role="status" className="sr-only">
           {note}
         </p>
         <p
           aria-hidden={note ? true : undefined}
-          className={`text-xl min-h-[1.75rem] ${
+          className={`text-[length:var(--calc-sum-text,1.25rem)] leading-(--calc-sum-line) h-(--calc-sum-line) truncate ${
             note ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-secondary)]"
           }`}
         >
           {note || (stored !== null && op ? `${tidy(stored)} ${op}` : "")}
         </p>
-        <p className="text-4xl font-bold text-[var(--text-primary)] break-all">
+        <p className="text-[length:var(--calc-number-text,2.25rem)] leading-(--calc-number-line) font-bold text-[var(--text-primary)] break-all">
           {display}
         </p>
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-(--calc-key-gap)">
         <Key label="Clear" onPress={() => clearAll()} style="clear" wide />
         <Key
           label={
             // Not "Back": that word means "go to the last page" everywhere else
             <span className="flex flex-col items-center leading-none">
-              <Delete aria-hidden="true" className="size-7" />
-              <span className="text-base mt-0.5">Delete</span>
+              <Delete aria-hidden="true" className="size-[min(1.75rem,45cqh)]" />
+              <span className="text-base leading-none mt-0.5">Delete</span>
             </span>
           }
           onPress={pressBack}
@@ -284,7 +287,7 @@ export default function CalculatorPage() {
       {/* Always shown, so the Person knows the bills are down there (even if there are none) */}
       <button
         onClick={goToBills}
-        className="mt-3 w-full h-14 rounded-xl text-xl font-semibold shadow-md bg-[var(--bg-card)] border-2 border-[var(--accent-button-bg)] text-[var(--accent-text)] active:scale-95 transition-all"
+        className="mt-(--calc-bills-button-gap) mb-(--calc-end-gap) w-full h-(--calc-bills-button) rounded-xl text-[length:var(--calc-bills-button-text,1.25rem)] font-semibold shadow-md bg-[var(--bg-card)] border-2 border-[var(--accent-button-bg)] text-[var(--accent-text)] active:scale-95 transition-transform"
       >
         <span aria-hidden="true">↓ </span>Add up your unpaid bills
       </button>
